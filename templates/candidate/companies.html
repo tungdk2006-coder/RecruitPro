@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Top Companies - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <h2 class="fw-bold m-0"><i class="fa-regular fa-building text-primary me-2"></i>Top Companies</h2>
+    <a href="{{ url_for('candidate.search_jobs') }}" class="btn btn-outline-primary"><i class="fa-solid fa-search me-1"></i> Search Jobs</a>
+</div>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for company in companies %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0 hover-card transition-all">
+            <div class="card-body p-4 text-center">
+                <div class="mb-3 d-flex justify-content-center">
+                    {% if company['LogoURL'] %}
+                        <img src="{{ url_for('static', filename=company['LogoURL'].replace('static/', '').replace('\\', '/')) }}" alt="{{ company['EmployerName'] }} Logo" class="img-fluid rounded-circle border" style="width: 80px; height: 80px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-light rounded-circle border d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                            {{ company['EmployerName'][:1].upper() }}
+                        </div>
+                    {% endif %}
+                </div>
+                <h5 class="card-title fw-bold mb-2">{{ company['EmployerName'] }}</h5>
+                <p class="text-muted small mb-3 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; height: 4.5em;">
+                    {{ company['CompanyDescription'] or 'No description available for this company.' }}
+                </p>
+                <div class="mb-3">
+                    <span class="badge bg-{{ 'success' if company['OpenJobs'] > 0 else 'secondary' }} rounded-pill px-3 py-2">
+                        <i class="fa-solid fa-briefcase me-1"></i> {{ company['OpenJobs'] }} Open Position{{ 's' if company['OpenJobs'] != 1 else '' }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-top-0 p-3 text-center">
+                {% if company['OpenJobs'] > 0 %}
+                    <a href="{{ url_for('candidate.search_jobs', employer_id=company['EmployerID']) }}" class="btn btn-primary w-100 rounded-pill">View Jobs</a>
+                {% else %}
+                    <button class="btn btn-outline-secondary w-100 rounded-pill" disabled>No Open Jobs</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <div class="bg-light rounded-circle p-4 mb-3 d-inline-block">
+            <i class="fa-regular fa-building fa-3x text-secondary"></i>
+        </div>
+        <h4 class="fw-bold text-muted">No Companies Found</h4>
+        <p class="text-muted mb-4">There are currently no companies registered in the system.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+    }
+    .transition-all {
+        transition: all .3s ease-in-out;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Dashboard - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-gauge text-primary me-2"></i>My Dashboard</h2>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Left Column: Profile Overview -->
+    <div class="col-md-5">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold border-bottom pb-2 mb-4">Profile Overview</h5>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex justify-content-center align-items-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                        {{ cand.CandidateName[0].upper() if cand and cand.CandidateName else 'C' }}
+                    </div>
+                    <div>
+                        <h5 class="mb-1 fw-bold">{{ cand.CandidateName if cand else 'Candidate' }}</h5>
+                        <p class="text-muted mb-0 small">{{ cand.Email if cand else '' }}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="small fw-semibold text-muted">Profile Completion</span>
+                        <span class="small fw-bold text-primary">{{ completion }}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ completion }}%"></div>
+                    </div>
+                    {% if completion < 100 %}
+                        <p class="text-muted small mt-2"><i class="fa-solid fa-circle-exclamation text-warning me-1"></i>Complete your profile to stand out to employers.</p>
+                    {% endif %}
+                </div>
+                
+                <a href="{{ url_for('candidate.profile') }}" class="btn btn-outline-primary w-100">
+                    <i class="fa-solid fa-user-pen me-2"></i>Edit Profile
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Right Column: Application Status -->
+    <div class="col-md-7">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+            <div class="card-body p-4 d-flex flex-column">
+                <h5 class="card-title fw-bold border-bottom pb-2 mb-4">Application Status</h5>
+                
+                {% if stats and stats.TotalApplications > 0 %}
+                    <div class="row align-items-center flex-grow-1">
+                        <div class="col-sm-6 d-flex justify-content-center">
+                            <div style="position: relative; height: 280px; width: 100%; max-width: 280px; overflow: hidden;">
+                                <canvas id="appStatusChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 mt-3 mt-sm-0">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-paper-plane text-primary me-2"></i>Applied:</span>
+                                <span class="fw-bold">{{ stats.Applied or 0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-search text-secondary me-2"></i>Screening:</span>
+                                <span class="fw-bold">{{ stats.Screening or 0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-comments text-info me-2"></i>Interviewing:</span>
+                                <span class="fw-bold">{{ stats.Interviewing or 0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-envelope-open-text text-warning me-2"></i>Offered:</span>
+                                <span class="fw-bold">{{ stats.Offered or 0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted"><i class="fa-solid fa-circle-check text-success me-2"></i>Accepted:</span>
+                                <span class="fw-bold">{{ stats.Accepted or 0 }}</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted"><i class="fa-solid fa-circle-xmark text-danger me-2"></i>Rejected:</span>
+                                <span class="fw-bold">{{ stats.Rejected or 0 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 flex-grow-1 d-flex flex-column justify-content-center align-items-center">
+                        <div class="bg-light rounded-circle p-4 mb-3 d-inline-block">
+                            <i class="fa-solid fa-folder-open fa-3x text-secondary"></i>
+                        </div>
+                        <h5 class="text-muted">You haven't applied to any jobs yet.</h5>
+                        <p class="text-muted small mb-4">Discover exciting opportunities and start applying today!</p>
+                        <a href="{{ url_for('candidate.search_jobs') }}" class="btn btn-primary px-4 rounded-pill">Find Jobs Now</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row: Recent Activities (Saved Jobs) -->
+<div class="card shadow-sm border-0 rounded-3 mb-4">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+            <h5 class="card-title fw-bold m-0">Recent Activities (Saved Jobs)</h5>
+            <a href="{{ url_for('candidate.saved_jobs') }}" class="text-decoration-none small">View All <i class="fa-solid fa-arrow-right ms-1"></i></a>
+        </div>
+        
+        {% if recent_saved %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3 border-0 rounded-start">Position</th>
+                            <th class="border-0">Company</th>
+                            <th class="border-0">Location</th>
+                            <th class="border-0 text-end pe-3 rounded-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in recent_saved %}
+                            <tr>
+                                <td class="ps-3 fw-semibold">
+                                    <a href="{{ url_for('candidate.job_detail', id=job.PositionID) }}" class="text-decoration-none">{{ job.PositionName }}</a>
+                                </td>
+                                <td><i class="fa-regular fa-building text-muted me-2"></i>{{ job.EmployerName }}</td>
+                                <td>{{ job.Location }}</td>
+                                <td class="text-end pe-3">
+                                    <form action="{{ url_for('candidate.unsave_job', id=job.PositionID) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle" title="Unsave">
+                                            <i class="fa-solid fa-heart-crack"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="bg-light rounded-circle p-4 mb-3 d-inline-block">
+                    <i class="fa-regular fa-bookmark fa-3x text-secondary"></i>
+                </div>
+                <h5 class="text-muted fw-bold">No Saved Jobs</h5>
+                <p class="text-muted mb-4">You haven't saved any jobs yet. Browse and save jobs to apply later.</p>
+                <a href="{{ url_for('candidate.search_jobs') }}" class="btn btn-outline-primary rounded-pill px-4">Find Jobs</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Upcoming Interviews -->
+<div class="card shadow-sm border-0 rounded-3 mb-4">
+    <div class="card-body p-4">
+        <h5 class="card-title fw-bold border-bottom pb-2 mb-4">Upcoming Interviews</h5>
+        {% if upcoming_interviews %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Position</th>
+                        <th>Company</th>
+                        <th>Interviewer</th>
+                        <th>Type</th>
+                        <th>Location</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for iv in upcoming_interviews %}
+                    <tr>
+                        <td>{{ iv.InterviewDate.strftime('%H:%M %d/%m/%Y') if iv.InterviewDate else '' }}</td>
+                        <td>{{ iv.PositionName }}</td>
+                        <td>{{ iv.EmployerName }}</td>
+                        <td>{{ iv.InterviewerName or 'N/A' }}</td>
+                        <td>{{ iv.InterviewType }}</td>
+                        <td>{{ iv.Location }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No upcoming interviews.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Job Offers -->
+<div class="card shadow-sm border-0 rounded-3 mb-4">
+    <div class="card-body p-4">
+        <h5 class="card-title fw-bold border-bottom pb-2 mb-4">Job Offers</h5>
+        {% if pending_offers %}
+        <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Position</th>
+                        <th>Company</th>
+                        <th>Salary</th>
+                        <th>Valid Until</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for off in pending_offers %}
+                    <tr>
+                        <td>{{ off.PositionName }}</td>
+                        <td>{{ off.EmployerName }}</td>
+                        <td>{{ off.BasicSalary }}</td>
+                        <td>{{ off.ValidUntil.strftime('%d/%m/%Y') if off.ValidUntil else '' }}</td>
+                        <td>
+                            <form method="POST" action="{{ url_for('candidate.accept_offer', application_id=off.ApplicationID) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button class="btn btn-sm btn-success">Accept</button>
+                            </form>
+                            <form method="POST" action="{{ url_for('candidate.decline_offer', application_id=off.ApplicationID) }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button class="btn btn-sm btn-outline-danger">Decline</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">No pending job offers.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if stats and stats.TotalApplications > 0 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('appStatusChart').getContext('2d');
+        const data = {
+            labels: ['Applied', 'Screening', 'Interviewing', 'Offered', 'Accepted', 'Rejected'],
+            datasets: [{
+                data: [
+                    {{ stats.Applied or 0 }}, 
+                    {{ stats.Screening or 0 }}, 
+                    {{ stats.Interviewing or 0 }},
+                    {{ stats.Offered or 0 }},
+                    {{ stats.Accepted or 0 }},
+                    {{ stats.Rejected or 0 }}
+                ],
+                backgroundColor: [
+                    '#0d6efd',
+                    '#6c757d',
+                    '#0dcaf0',
+                    '#ffc107',
+                    '#198754',
+                    '#dc3545'
+                ],
+                borderWidth: 1,
+                hoverOffset: 4
+            }]
+        };
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: data,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

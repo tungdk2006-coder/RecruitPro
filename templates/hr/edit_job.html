@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Edit Job - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('hr.manage_jobs') }}" class="text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Back to Jobs</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h3 class="card-title fw-bold border-bottom pb-2 mb-4">Edit Job: {{ job.PositionName }}</h3>
+        
+        <form method="POST" action="{{ url_for('hr.edit_job', id=job.PositionID) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Job Title</label>
+                    <input type="text" class="form-control" name="position_name" value="{{ job.PositionName }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Department</label>
+                    <select class="form-select" name="department_id" required>
+                        <option value="">Select Department</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.DepartmentID }}" {% if dept.DepartmentID == job.DepartmentID %}selected{% endif %}>{{ dept.DepartmentName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Job Type</label>
+                    <select class="form-select" name="job_type" required>
+                        <option value="Full-Time" {% if job.JobType == 'Full-Time' %}selected{% endif %}>Full-Time</option>
+                        <option value="Part-Time" {% if job.JobType == 'Part-Time' %}selected{% endif %}>Part-Time</option>
+                        <option value="Contract" {% if job.JobType == 'Contract' %}selected{% endif %}>Contract</option>
+                        <option value="Remote" {% if job.JobType == 'Remote' %}selected{% endif %}>Remote</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Location</label>
+                    <input type="text" class="form-control" name="location" value="{{ job.Location }}" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Application Deadline</label>
+                    <input type="date" class="form-control" name="deadline" value="{{ job.Deadline.strftime('%Y-%m-%d') if job.Deadline else '' }}">
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Min Salary</label>
+                    <input type="number" class="form-control" name="salary_min" value="{{ job.SalaryMin }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Max Salary</label>
+                    <input type="number" class="form-control" name="salary_max" value="{{ job.SalaryMax }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Openings</label>
+                    <input type="number" class="form-control" name="openings" value="{{ job.Openings }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Max Interview Rounds</label>
+                    <input type="number" class="form-control" name="max_rounds" value="{{ job.MaxRounds }}" required>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Experience Required (Years)</label>
+                    <input type="number" class="form-control" name="experience_years" value="{{ job.ExperienceYears }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Education Level</label>
+                    <select class="form-select" name="education_level" required>
+                        <option value="High School" {% if job.EducationLevel == 'High School' %}selected{% endif %}>High School</option>
+                        <option value="Associate" {% if job.EducationLevel == 'Associate' %}selected{% endif %}>Associate Degree</option>
+                        <option value="Bachelor" {% if job.EducationLevel == 'Bachelor' %}selected{% endif %}>Bachelor's Degree</option>
+                        <option value="Master" {% if job.EducationLevel == 'Master' %}selected{% endif %}>Master's Degree</option>
+                        <option value="PhD" {% if job.EducationLevel == 'PhD' %}selected{% endif %}>Ph.D.</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Status</label>
+                <select class="form-select" name="status" required>
+                    <option value="Draft" {% if job.Status == 'Draft' %}selected{% endif %}>Draft (Hidden)</option>
+                    <option value="Open" {% if job.Status == 'Open' %}selected{% endif %}>Open (Visible)</option>
+                    <option value="Closed" {% if job.Status == 'Closed' %}selected{% endif %}>Closed</option>
+                    <option value="On Hold" {% if job.Status == 'On Hold' %}selected{% endif %}>On Hold</option>
+                </select>
+            </div>
+
+            <div class="text-end border-top pt-3">
+                <button type="submit" class="btn btn-primary px-5">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Analyst Dashboard - RecruitPro{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fa-solid fa-chart-line me-2"></i>Analyst Dashboard</h2>
+
+<!-- FILTER BY COMPANY -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <form method="GET" action="{{ url_for('analyst.dashboard') }}" class="d-flex">
+            <select name="employer_id" class="form-select me-2">
+                <option value="">All Companies</option>
+                {% for emp in employers %}
+                <option value="{{ emp.EmployerID }}" {% if selected_employer == emp.EmployerID|string %}selected{% endif %}>{{ emp.EmployerName }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-primary">View</button>
+        </form>
+    </div>
+    {% if selected_employer %}
+    <div class="col-md-2">
+        <a href="{{ url_for('analyst.dashboard') }}" class="btn btn-outline-secondary">Show All</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Quick Stats -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-primary">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-file-alt fa-2x mb-2"></i>
+                <h5 class="card-title">{{ total_apps }}</h5>
+                <p class="card-text">Total Applications</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-info">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-calendar-check fa-2x mb-2"></i>
+                <h5 class="card-title">{{ total_interviews }}</h5>
+                <p class="card-text">Total Interviews</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-success">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-briefcase fa-2x mb-2"></i>
+                <h5 class="card-title">{{ total_jobs }}</h5>
+                <p class="card-text">Total Jobs</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-warning">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-envelope-open-text fa-2x mb-2"></i>
+                <h5 class="card-title">{{ total_offers }}</h5>
+                <p class="card-text">Total Offers</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Application Status Summary -->
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">System-wide Applications</div>
+            <div class="card-body p-0">
+                {% if status_summary %}
+                <table class="table table-sm table-hover mb-0">
+                    <thead><tr><th>Status</th><th>Count</th></tr></thead>
+                    <tbody>
+                        {% for row in status_summary %}
+                        <tr><td>{{ row.Status }}</td><td>{{ row.Count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-3 text-muted">No data available.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Employer Stats -->
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light fw-bold">Employer Stats</div>
+            <div class="card-body p-0">
+                {% if employer_stats %}
+                <table class="table table-sm table-hover mb-0">
+                    <thead><tr><th>Employer</th><th>Total Jobs</th><th>Total Apps</th></tr></thead>
+                    <tbody>
+                        {% for row in employer_stats %}
+                        <tr><td>{{ row.EmployerName }}</td><td>{{ row.TotalJobs }}</td><td>{{ row.TotalApps }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-3 text-muted">No data available.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recruitment Funnel Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-bold">Recruitment Funnel {% if selected_employer %}(Filtered){% else %}(System-wide){% endif %}</div>
+            <div class="card-body">
+                <canvas id="funnelChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Monthly Application Trend Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light fw-bold">Monthly Application Trend</div>
+            <div class="card-body">
+                <canvas id="monthlyTrendChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Liên kết đến các trang khác -->
+<div class="row">
+    <div class="col-md-6">
+        <a href="{{ url_for('analyst.top_candidates') }}" class="btn btn-outline-primary w-100">Top Candidates</a>
+    </div>
+    <div class="col-md-6">
+        <a href="{{ url_for('analyst.interviewer_workload') }}" class="btn btn-outline-info w-100">Interviewer Workload</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // === BIỂU ĐỒ FUNNEL ===
+    const funnelData = {
+        applied: {{ funnel.Applied or 0 }},
+        screened: {{ funnel.Screened or 0 }},
+        interviewed: {{ funnel.Interviewed or 0 }},
+        offered: {{ funnel.Offered or 0 }},
+        hired: {{ funnel.Hired or 0 }}
+    };
+    if (funnelData.applied > 0) {
+        const ctxFunnel = document.getElementById('funnelChart').getContext('2d');
+        new Chart(ctxFunnel, {
+            type: 'bar',
+            data: {
+                labels: ['Applied', 'Screened', 'Interviewed', 'Offered', 'Hired'],
+                datasets: [{
+                    label: 'Number of Candidates',
+                    data: [funnelData.applied, funnelData.screened, funnelData.interviewed, funnelData.offered, funnelData.hired],
+                    backgroundColor: [
+                        'rgba(108, 117, 125, 0.7)',
+                        'rgba(13, 202, 240, 0.7)',
+                        'rgba(255, 193, 7, 0.7)',
+                        'rgba(13, 110, 253, 0.7)',
+                        'rgba(25, 135, 84, 0.7)'
+                    ],
+                    borderColor: ['#6c757d','#0dcaf0','#ffc107','#0d6efd','#198754'],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    } else {
+        document.getElementById('funnelChart').parentElement.innerHTML = '<div class="alert alert-info text-center">Chưa có dữ liệu ứng viên.</div>';
+    }
+
+    // === BIỂU ĐỒ XU HƯỚNG THÁNG ===
+    const urlParams = new URLSearchParams(window.location.search);
+    const employerParam = urlParams.get('employer_id') || '';
+    fetch('/analyst/api/monthly-trends?employer_id=' + employerParam)
+    .then(response => response.json())
+    .then(data => {
+        const labels = data.map(item => item.Month);
+        const counts = data.map(item => item.Count);
+        const ctxTrend = document.getElementById('monthlyTrendChart').getContext('2d');
+        new Chart(ctxTrend, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Applications',
+                    data: counts,
+                    borderColor: '#0d6efd',
+                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    })
+    .catch(error => console.error('Error loading trend data:', error));
+</script>
+{% endblock %}

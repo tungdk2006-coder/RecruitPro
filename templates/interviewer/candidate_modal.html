@@ -1,0 +1,17 @@
+<div class="modal-header">
+    <h5 class="modal-title">{{ candidate.CandidateName }}</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body">
+    <p><strong>Email:</strong> {{ candidate.Email }}</p>
+    <p><strong>Phone:</strong> {{ candidate.PhoneNumber or 'N/A' }}</p>
+    <p><strong>Education:</strong> {{ candidate.EducationLevel or 'N/A' }}</p>
+    <p><strong>Experience:</strong> {{ candidate.YearsOfExperience or 0 }} years</p>
+    <p><strong>GPA:</strong> {{ candidate.GPA or 'N/A' }}</p>
+    {% if candidate.ResumeURL %}
+    <a href="{{ candidate.ResumeURL }}" class="btn btn-sm btn-outline-danger" target="_blank">View CV</a>
+    {% endif %}
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+</div>

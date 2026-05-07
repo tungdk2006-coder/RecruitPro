@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-user-pen text-primary me-2"></i>My Profile</h2>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 rounded-3 h-100">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold border-bottom pb-2 mb-4">Personal Information</h5>
+                <form action="{{ url_for('candidate.profile') }}" method="POST" enctype="multipart/form-data" id="profileForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Full Name</label>
+                            <input type="text" class="form-control" value="{{ candidate.CandidateName }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Email</label>
+                            <input type="email" class="form-control" value="{{ candidate.Email }}" placeholder="example@gmail.com" disabled>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control" value="{{ candidate.PhoneNumber or '' }}" placeholder="0901234567" pattern="[0-9]{10}" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Years of Experience</label>
+                            <input type="number" name="exp" class="form-control" value="{{ candidate.YearsOfExperience or 0 }}" min="0">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Address</label>
+                        <input type="text" name="address" class="form-control" value="{{ candidate.Address or '' }}">
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Education Level</label>
+                            <select name="education" class="form-select">
+                                <option value="">Select Level</option>
+                                <option value="High School" {% if candidate.EducationLevel == 'High School' %}selected{% endif %}>High School</option>
+                                <option value="Associate" {% if candidate.EducationLevel == 'Associate' %}selected{% endif %}>Associate</option>
+                                <option value="Bachelor" {% if candidate.EducationLevel == 'Bachelor' %}selected{% endif %}>Bachelor</option>
+                                <option value="Master" {% if candidate.EducationLevel == 'Master' %}selected{% endif %}>Master</option>
+                                <option value="PhD" {% if candidate.EducationLevel == 'PhD' %}selected{% endif %}>PhD</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">GPA</label>
+                            <input type="number" min="0.0" max="4.0" step="0.1" name="gpa" class="form-control" value="{{ candidate.GPA or '' }}" placeholder="3.2">
+                            <div class="form-text small">Scale 0.0 – 4.0</div>
+                        </div>
+                    </div>
+                    
+                    <h5 class="fw-bold border-bottom pb-2 mb-3">Resume / CV</h5>
+                    <div class="mb-4">
+                        {% if candidate.ResumeURL %}
+                            <div class="d-flex align-items-center p-3 bg-light rounded border mb-3">
+                                <i class="fa-solid fa-file-pdf fa-2x text-danger me-3"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-0">Current CV</h6>
+                                    <a href="{{ url_for('static', filename=candidate.ResumeURL.replace('static/', '').replace('\\', '/')) }}" target="_blank" class="small text-decoration-none">View Document</a>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <label class="form-label">Upload New CV (PDF only)</label>
+                        <input type="file" name="cv_file" class="form-control" accept=".pdf">
+                        <input type="hidden" name="current_resume" value="{{ candidate.ResumeURL or '' }}">
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4" id="saveProfileBtn">
+                            <span id="saveProfileText">Save Changes</span>
+                            <span id="saveProfileSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 rounded-3 h-100">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold border-bottom pb-2 mb-4">My Skills</h5>
+                
+                <form action="{{ url_for('candidate.add_skill') }}" method="POST" class="bg-light p-3 rounded border mb-4" id="skillForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <h6 class="fw-bold mb-3">Add / Update Skill</h6>
+                    <div class="mb-2">
+                        <select name="skill_id" class="form-select" required>
+                            <option value="">Select a Skill</option>
+                            {% for skill in all_skills %}
+                                <option value="{{ skill.SkillID }}">{{ skill.SkillName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-sm-6">
+                            <select name="proficiency" class="form-select" required>
+                                <option value="">Proficiency Level</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                                <option value="Expert">Expert</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="input-group">
+                                <input type="number" step="0.5" min="0" name="years_used" class="form-control" placeholder="Years" required>
+                                <span class="input-group-text">Yrs</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary w-100" id="addSkillBtn">
+                        <span id="addSkillText"><i class="fa-solid fa-plus me-1"></i> Save Skill</span>
+                        <span id="addSkillSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </form>
+                
+                {% if my_skills %}
+                    <ul class="list-group list-group-flush">
+                        {% for skill in my_skills %}
+                        <li class="list-group-item px-0 py-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ skill.SkillName }}</h6>
+                                <span class="small text-muted">{{ skill.YearsUsed }} years experience</span>
+                            </div>
+                            <span class="badge 
+                                {% if skill.ProficiencyLevel == 'Beginner' %}bg-secondary
+                                {% elif skill.ProficiencyLevel == 'Intermediate' %}bg-info text-dark
+                                {% elif skill.ProficiencyLevel == 'Advanced' %}bg-primary
+                                {% else %}bg-success{% endif %} rounded-pill px-3 py-2">
+                                {{ skill.ProficiencyLevel }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-star-half-stroke fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">No skills added yet.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Form Spinners
+        const profileForm = document.getElementById('profileForm');
+        profileForm.addEventListener('submit', function() {
+            document.getElementById('saveProfileText').classList.add('d-none');
+            document.getElementById('saveProfileSpinner').classList.remove('d-none');
+            document.getElementById('saveProfileBtn').disabled = true;
+        });
+        
+        const skillForm = document.getElementById('skillForm');
+        skillForm.addEventListener('submit', function() {
+            document.getElementById('addSkillText').classList.add('d-none');
+            document.getElementById('addSkillSpinner').classList.remove('d-none');
+            document.getElementById('addSkillBtn').disabled = true;
+        });
+    });
+</script>
+{% endblock %}

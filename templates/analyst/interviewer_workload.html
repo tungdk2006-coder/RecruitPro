@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Interviewer Workload - RecruitPro{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fa-solid fa-user-clock me-2"></i>Interviewer Workload Stats</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if workload %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Interviewer Name</th>
+                        <th>Employer</th>
+                        <th>Total Interviews</th>
+                        <th>Avg Score Given</th>
+                        <th>Passes</th>
+                        <th>Fails</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for w in workload %}
+                    <tr>
+                        <td>{{ w.FullName }}</td>
+                        <td>{{ w.EmployerName }}</td>
+                        <td>{{ w.TotalInterviews }}</td>
+                        <td>{{ w.AvgGivenScore }}</td>
+                        <td>{{ w.Passes }}</td>
+                        <td>{{ w.Fails }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">No workload data available.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

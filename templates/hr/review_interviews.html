@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Review Completed Interviews - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Review Completed Interviews</h2>
+    <p class="text-muted">Evaluate the feedback and make final hiring decisions.</p>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if interviews %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Position</th>
+                        <th>Interviewer</th>
+                        <th>Date</th>
+                        <th>Score</th>
+                        <th>Result</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for iv in interviews %}
+                    <tr>
+                        <td>{{ iv.CandidateName }}</td>
+                        <td>{{ iv.PositionName }}</td>
+                        <td>{{ iv.InterviewerName }}</td>
+                        <td>{{ iv.InterviewDate.strftime('%H:%M %d/%m/%Y') if iv.InterviewDate else '' }}</td>
+                        <td>{{ iv.Score }}</td>
+                        <td>
+                            {% if iv.Result == 'Pass' %}
+                                <span class="badge bg-success">Pass</span>
+                            {% elif iv.Result == 'Fail' %}
+                                <span class="badge bg-danger">Fail</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ iv.Result }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="btn-group">
+                                <!-- Nút xem Feedback (luôn hiển thị) -->
+                                <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#feedbackModal{{ iv.InterviewID }}">
+                                    <i class="fa-solid fa-eye"></i> View
+                                </button>
+                                
+                                <!-- Nút Decide hoặc Badge trạng thái -->
+                                {% if iv.AppStatus == 'Offered' %}
+                                    <span class="badge bg-warning text-dark">Sent Offer</span>
+                                {% elif iv.AppStatus == 'Accepted' %}
+                                    <span class="badge bg-success">Accepted</span>
+                                {% elif iv.AppStatus == 'Rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
+                                {% else %}
+                                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#decisionModal{{ iv.ApplicationID }}">
+                                        <i class="fa-solid fa-gavel"></i> Decide
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Modal Xem Feedback -->
+                    <div class="modal fade" id="feedbackModal{{ iv.InterviewID }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Feedback: {{ iv.CandidateName }} for {{ iv.PositionName }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p><strong>Score:</strong> {{ iv.Score }}</p>
+                                    <div class="border p-3 bg-light" style="white-space: pre-wrap;">{{ iv.Note }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Make Decision (chỉ hiển thị nếu chưa quyết định) -->
+                    {% if iv.AppStatus not in ('Offered', 'Accepted', 'Rejected') %}
+                    <div class="modal fade" id="decisionModal{{ iv.ApplicationID }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-sm">
+                            <div class="modal-content">
+                                <form method="POST" action="{{ url_for('hr.make_decision', application_id=iv.ApplicationID) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <div class="modal-header">
+                                        <h6 class="modal-title">Decision for {{ iv.CandidateName }}</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body text-start">
+                                        <p class="text-muted">Move to next step:</p>
+                                        <button type="submit" name="decision" value="offer" class="btn btn-success w-100 mb-2">Offer Job</button>
+                                        <button type="submit" name="decision" value="reject" class="btn btn-outline-danger w-100">Reject</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-check-circle fa-3x mb-3"></i>
+            <p>No interview feedback to review yet.</p>
+        </div>
+        {% endif %}
+    </div>
+<!-- PHÂN TRANG -->
+    {% if total_pages > 1 %}
+        <div class="card-footer bg-white d-flex justify-content-center pt-3 pb-2">
+            <nav aria-label="Review interviews pages">
+                <ul class="pagination mb-0 shadow-sm">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('hr.review_interviews', page=page-1) }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo; Previous</span>
+                        </a>
+                    </li>
+                    {% for p in range(1, total_pages + 1) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('hr.review_interviews', page=p) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('hr.review_interviews', page=page+1) }}" aria-label="Next">
+                            <span aria-hidden="true">Next &raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

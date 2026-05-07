@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Top Candidates - {{ employer.EmployerName }} - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-ranking-star me-2"></i>Top Candidates: {{ employer.EmployerName }}</h2>
+    <a href="{{ url_for('analyst.top_candidates') }}" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left me-2"></i>Back to Companies</a>
+</div>
+
+<!-- Filter Bar -->
+<form method="GET" class="row mb-3 g-2">
+    <div class="col-md-4">
+        <input type="text" class="form-control" name="search_name" placeholder="Candidate name..." value="{{ search_name }}">
+    </div>
+    <div class="col-md-4">
+        <input type="text" class="form-control" name="search_position" placeholder="Position..." value="{{ search_position }}">
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-2">
+        <a href="{{ url_for('analyst.top_candidates_company', employer_id=request.view_args.employer_id) }}" class="btn btn-outline-secondary w-100">Clear</a>
+    </div>
+</form>
+
+<!-- Results Table -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if candidates %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Rank</th>
+                        <th>Candidate</th>
+                        <th>Position</th>
+                        <th>Avg Score</th>
+                        <th>Rounds</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in candidates %}
+                    <tr>
+                        <td><span class="badge bg-primary">#{{ c.RankNum }}</span></td>
+                        <td>{{ c.CandidateName }}</td>
+                        <td>{{ c.PositionName }}</td>
+                        <td><span class="fw-bold">{{ c.AvgScore }}</span></td>
+                        <td>{{ c.TotalRounds }}</td>
+                        <td><span class="badge bg-info">{{ c.ApplicationStatus }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-user-slash fa-3x mb-3"></i>
+            <p>No candidates found for this company.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

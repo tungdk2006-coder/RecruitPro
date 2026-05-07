@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}My Job Offers - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-envelope-open-text me-2"></i>My Job Offers</h2>
+</div>
+
+<div class="row">
+    {% for offer in offers %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100 border-top border-primary border-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h4 class="card-title fw-bold mb-1">{{ offer.PositionName }}</h4>
+                        <h6 class="text-muted"><i class="fa-regular fa-building me-2"></i>{{ offer.EmployerName }}</h6>
+                    </div>
+                    <span class="badge fs-6
+                        {% if offer.Status == 'Pending' %} bg-warning text-dark
+                        {% elif offer.Status == 'Accepted' %} bg-success
+                        {% elif offer.Status == 'Declined' %} bg-danger
+                        {% else %} bg-secondary {% endif %}
+                    ">
+                        {{ offer.Status }}
+                    </span>
+                </div>
+                
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item px-0">
+                        <strong>Offer Date:</strong> {{ offer.OfferDate.strftime('%Y-%m-%d') if offer.OfferDate else 'N/A' }}
+                    </li>
+                    <li class="list-group-item px-0">
+                        <strong>Response Deadline:</strong> <span class="text-danger">{{ offer.ValidUntil.strftime('%Y-%m-%d') if offer.ValidUntil else 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <strong>Base Salary:</strong> <span class="text-success fw-bold">${{ offer.BasicSalary }}</span>
+                    </li>
+                </ul>
+
+                <div class="bg-light p-3 rounded mb-4">
+                    <p class="mb-0 small text-muted"><strong>Offer Details / Notes:</strong></p>
+                    <p class="mb-0">{{ offer.Note or "No additional notes provided." }}</p>
+                </div>
+
+                {% if offer.Status == 'Pending' %}
+                <div class="d-flex gap-2">
+                    <form method="POST" action="{{ url_for('candidate.accept_offer', application_id=offer.ApplicationID) }}" class="w-50">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-success w-100" onclick="return confirm('Are you sure you want to accept this offer?');">Accept Offer</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('candidate.decline_offer', application_id=offer.ApplicationID) }}" class="w-50">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Are you sure you want to decline this offer? This cannot be undone.');">Decline</button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5 text-muted mt-4">
+        <i class="fa-solid fa-handshake-angle fa-4x mb-3"></i>
+        <h3>No Job Offers Yet</h3>
+        <p>Keep applying and passing those interviews! Offers will appear here.</p>
+        <a href="{{ url_for('candidate.search_jobs') }}" class="btn btn-primary mt-3">Find More Jobs</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

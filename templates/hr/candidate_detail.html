@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Candidate Detail - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('hr.applications') }}" class="text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Back to Applications</a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body text-center p-4">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                    {{ candidate.CandidateName[0] if candidate.CandidateName else 'C' }}
+                </div>
+                <h4 class="fw-bold mb-1">{{ candidate.CandidateName }}</h4>
+                <p class="text-muted mb-3">{{ candidate.Email }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    {% if candidate.ResumeURL %}
+                    <a href="{{ url_for('static', filename=candidate.ResumeURL.replace('static/', '').replace('\\', '/')) if 'static' in candidate.ResumeURL else '#' }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                        <i class="fa-solid fa-file-pdf me-1"></i> View CV
+                    </a>
+                    {% endif %}
+                    <a href="mailto:{{ candidate.Email }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa-solid fa-envelope me-1"></i> Email
+                    </a>
+                </div>
+                
+                <ul class="list-group list-group-flush text-start">
+                    <li class="list-group-item px-0"><strong>Phone:</strong> {{ candidate.Phone or 'N/A' }}</li>
+                    <li class="list-group-item px-0"><strong>Location:</strong> {{ candidate.Address or 'N/A' }}</li>
+                    <li class="list-group-item px-0"><strong>Gender:</strong> {{ candidate.Gender or 'N/A' }}</li>
+                    <li class="list-group-item px-0"><strong>DOB:</strong> {{ candidate.DateOfBirth.strftime('%Y-%m-%d') if candidate.DateOfBirth else 'N/A' }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h4 class="fw-bold border-bottom pb-2 mb-4">Professional Background</h4>
+                
+                <div class="row mb-4">
+                    <div class="col-sm-4">
+                        <div class="bg-light p-3 rounded text-center">
+                            <h6 class="text-muted text-uppercase mb-1">Education</h6>
+                            <h5 class="mb-0">{{ candidate.EducationLevel or 'N/A' }}</h5>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="bg-light p-3 rounded text-center">
+                            <h6 class="text-muted text-uppercase mb-1">Experience</h6>
+                            <h5 class="mb-0">{{ candidate.YearsOfExperience or 0 }} Years</h5>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="bg-light p-3 rounded text-center">
+                            <h6 class="text-muted text-uppercase mb-1">GPA</h6>
+                            <h5 class="mb-0">{{ candidate.GPA or 'N/A' }}</h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5 class="fw-bold mb-3">Skills</h5>
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    {% for skill in skills %}
+                        <span class="badge bg-secondary fs-6">
+                            {{ skill.SkillName }} <span class="badge bg-light text-dark ms-1">{{ skill.ProficiencyLevel }}</span>
+                        </span>
+                    {% else %}
+                        <p class="text-muted">No skills listed.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

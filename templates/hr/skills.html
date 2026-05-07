@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Manage Skills - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h3 class="card-title fw-bold border-bottom pb-2 mb-4">Skill Library</h3>
+                
+                <div class="d-flex flex-wrap gap-2">
+                    {% for skill in skills %}
+                        <span class="badge bg-secondary p-2 fs-6">{{ skill.SkillName }}</span>
+                    {% else %}
+                        <p class="text-muted">No skills exist in the system yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="card-title fw-bold border-bottom pb-2 mb-4">Add New Skill</h4>
+                <form method="POST" action="{{ url_for('hr.skills') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="mb-3">
+                        <label class="form-label">Skill Name</label>
+                        <input type="text" name="skill_name" class="form-control" placeholder="e.g. Python, Agile..." required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Add Skill</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

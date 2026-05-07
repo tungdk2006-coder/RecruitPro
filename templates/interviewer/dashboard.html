@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-calendar-day me-2"></i>Today's Interviews</h2>
+    <p class="text-muted">{{ date_today.strftime('%A, %d %B %Y') }}</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-primary">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-list-check fa-2x mb-2"></i>
+                <h5 class="card-title">{{ stats.total_today }}</h5>
+                <p class="card-text">Today's Interviews</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-success">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-circle-check fa-2x mb-2"></i>
+                <h5 class="card-title">{{ stats.completed_today }}</h5>
+                <p class="card-text">Completed Today</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-info">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-calendar-week fa-2x mb-2"></i>
+                <h5 class="card-title">{{ stats.upcoming_week }}</h5>
+                <p class="card-text">Upcoming This Week</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm text-white bg-warning">
+            <div class="card-body text-center">
+                <i class="fa-solid fa-star fa-2x mb-2"></i>
+                <h5 class="card-title">{{ stats.avg_score }}</h5>
+                <p class="card-text">Average Rating</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Schedule -->
+<div class="row">
+    {% if today_interviews %}
+    {% for iv in today_interviews %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div
+            class="card shadow-sm h-100 {% if iv.is_soon %}border-warning{% endif %} {% if iv.is_completed %}border-success bg-light{% endif %}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            {{ iv.CandidateName }}
+                            {% if iv.is_completed %}
+                            <span class="badge bg-success ms-2"><i class="fa-solid fa-check-circle"></i>
+                                Completed</span>
+                            {% endif %}
+                        </h5>
+                        <p class="text-muted mb-0">{{ iv.PositionName }}</p>
+                    </div>
+                    <span class="badge {% if iv.is_soon %}bg-warning text-dark{% else %}bg-info{% endif %}">
+                        {{ iv.InterviewDate.strftime('%H:%M') }}
+                    </span>
+                </div>
+                <p><i class="fa-solid fa-video me-2"></i>{{ iv.InterviewType }} - {{ iv.Location }}</p>
+
+                <div class="d-flex gap-2 mt-3">
+                    <!-- Nút Confirm -->
+                    <form method="POST" action="{{ url_for('interviewer.confirm_interview', id=iv.InterviewID) }}"
+                        class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <button type="submit" class="btn btn-sm btn-outline-info">
+                            <i class="fa-solid fa-check"></i> Confirm
+                        </button>
+                    </form>
+                    <a href="{{ iv.Location }}" target="_blank" class="btn btn-sm btn-primary">
+                        <i class="fa-solid fa-play me-1"></i> Start
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                        onclick="viewCandidateModal({{ iv.InterviewID }})">
+                        <i class="fa-solid fa-file-alt me-1"></i> View CV
+                    </button>
+                    <!-- Nút Feedback luôn hiển thị -->
+                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal"
+                        data-bs-target="#feedbackModal{{ iv.InterviewID }}">
+                        <i class="fa-solid fa-comment me-1"></i> Feedback
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+                <i class="fa-solid fa-calendar-check fa-3x text-muted mb-3"></i>
+                <h5>No interviews scheduled for today.</h5>
+                <p class="text-muted">Enjoy your day or check your upcoming schedule.</p>
+                <a href="{{ url_for('interviewer.schedule') }}" class="btn btn-primary mt-2">View Full Schedule</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Feedback Modals -->
+{% for iv in today_interviews %}
+<div class="modal fade" id="feedbackModal{{ iv.InterviewID }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('interviewer.record_result') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="interview_id" value="{{ iv.InterviewID }}" />
+                <div class="modal-header">
+                    <h5 class="modal-title">Feedback: {{ iv.CandidateName }} - {{ iv.PositionName }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label class="form-label">Technical Skills (0-10)</label>
+                            <input type="number" class="form-control" name="tech_skills" min="0" max="10" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Communication (0-10)</label>
+                            <input type="number" class="form-control" name="communication" min="0" max="10" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Overall Score (0-100)</label>
+                            <input type="number" class="form-control" name="score" min="0" max="100" required>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <label class="form-label">Strengths</label>
+                            <textarea class="form-control" name="strengths" rows="2"></textarea>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <label class="form-label">Weaknesses</label>
+                            <textarea class="form-control" name="weaknesses" rows="2"></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Result</label>
+                            <select name="result" class="form-select" required>
+                                <option value="Pass">Pass</option>
+                                <option value="Fail">Fail</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Additional Notes</label>
+                            <textarea class="form-control" name="note" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Candidate Modal -->
+<div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="candidateModalContent">
+            <!-- AJAX content loaded here -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function viewCandidateModal(interviewId) {
+        fetch('/interviewer/interview/' + interviewId + '/candidate')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('candidateModalContent').innerHTML = html;
+                new bootstrap.Modal(document.getElementById('candidateModal')).show();
+            });
+    }
+</script>
+{% endblock %}

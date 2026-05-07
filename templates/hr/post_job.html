@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% block title %}Post New Job - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('hr.manage_jobs') }}" class="text-decoration-none">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Jobs
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <h3 class="card-title fw-bold border-bottom pb-2 mb-4">
+            <i class="fa-solid fa-pen-to-square me-2"></i>Create Job Posting
+        </h3>
+        
+        <form method="POST" action="{{ url_for('hr.create_job') }}" id="jobForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Job Title <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="position_name" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Department <span class="text-danger">*</span></label>
+                    <select class="form-select" name="department_id" required>
+                        <option value="">Select Department</option>
+                        {% for dept in departments %}
+                            <option value="{{ dept.DepartmentID }}">{{ dept.DepartmentName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Job Type <span class="text-danger">*</span></label>
+                    <select class="form-select" name="job_type" required>
+                        <option value="Full-Time">Full-Time</option>
+                        <option value="Part-Time">Part-Time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Remote">Remote</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="location" list="locationOptions" required>
+                    <datalist id="locationOptions">
+                        {% for loc in locations %}
+                            <option value="{{ loc.Location }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">Application Deadline <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" name="deadline" required>
+                    <small class="text-muted">Last date for candidate applications</small>
+                </div>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Min Salary <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="salary_min" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Max Salary <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="salary_max" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Openings <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="openings" value="1" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Max Interview Rounds</label>
+                    <input type="number" class="form-control" name="max_rounds" value="3" required>
+                </div>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Experience Required (Years)</label>
+                    <input type="number" class="form-control" name="experience_years" value="0" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Education Level</label>
+                    <select class="form-select" name="education_level" required>
+                        <option value="High School">High School</option>
+                        <option value="Associate">Associate Degree</option>
+                        <option value="Bachelor">Bachelor's Degree</option>
+                        <option value="Master">Master's Degree</option>
+                        <option value="PhD">Ph.D.</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Initial Status</label>
+                <select class="form-select" name="status" required>
+                    <option value="Draft">Draft (Hidden)</option>
+                    <option value="Open">Open (Visible)</option>
+                </select>
+            </div>
+            
+            <h4 class="border-bottom pb-2 mb-3 mt-5">
+                <i class="fa-solid fa-list-check me-2"></i>Required Skills
+            </h4>
+            <div id="skills-container">
+                <div class="row skill-row mb-2">
+                    <div class="col-md-5">
+                        <select class="form-select" name="skill_id[]">
+                            <option value="">Select a skill</option>
+                            {% for skill in skills %}
+                                <option value="{{ skill.SkillID }}">{{ skill.SkillName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" name="required_level[]">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Expert">Expert</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-center">
+                        <div class="form-check me-3">
+                            <input class="form-check-input mandatory-checkbox" type="checkbox" value="1">
+                            <label class="form-check-label">Mandatory</label>
+                        </div>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-skill">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm mb-4" id="add-skill-btn">
+                <i class="fa-solid fa-plus me-1"></i> Add Another Skill
+            </button>
+
+            <div class="text-end border-top pt-3">
+                <button type="submit" class="btn btn-primary px-5">
+                    <i class="fa-solid fa-check me-1"></i> Create Job Position
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('skills-container');
+        const addBtn = document.getElementById('add-skill-btn');
+        
+        // Hàng mẫu
+        const templateRow = document.createElement('div');
+        templateRow.className = 'row skill-row mb-2';
+        templateRow.innerHTML = `
+            <div class="col-md-5">
+                <select class="form-select" name="skill_id[]">
+                    <option value="">Select a skill</option>
+                    {% for skill in skills %}
+                        <option value="{{ skill.SkillID }}">{{ skill.SkillName }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select" name="required_level[]">
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Expert">Expert</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-center">
+                <div class="form-check me-3">
+                    <input class="form-check-input mandatory-checkbox" type="checkbox" value="1">
+                    <label class="form-check-label">Mandatory</label>
+                </div>
+                <button type="button" class="btn btn-outline-danger btn-sm remove-skill">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        function attachEvents(row) {
+            const skillSelect = row.querySelector('select[name="skill_id[]"]');
+            const checkbox = row.querySelector('.mandatory-checkbox');
+            
+            skillSelect.addEventListener('change', function() {
+                if(this.value) {
+                    checkbox.name = 'mandatory_' + this.value;
+                } else {
+                    checkbox.removeAttribute('name');
+                }
+            });
+            
+            const removeBtn = row.querySelector('.remove-skill');
+            removeBtn.addEventListener('click', function() {
+                if (container.querySelectorAll('.skill-row').length > 1) {
+                    row.remove();
+                }
+            });
+        }
+        
+        // Gán sự kiện cho hàng đầu tiên
+        attachEvents(container.querySelector('.skill-row'));
+        
+        addBtn.addEventListener('click', function() {
+            const newRow = templateRow.cloneNode(true);
+            container.appendChild(newRow);
+            attachEvents(newRow);
+        });
+    });
+</script>
+{% endblock %}

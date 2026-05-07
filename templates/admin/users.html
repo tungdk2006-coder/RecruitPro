@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}User Management - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-users-cog me-2"></i>User Management</h2>
+    <p class="text-muted">View, lock/unlock accounts, and reset passwords.</p>
+</div>
+
+<!-- FILTER BAR -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('admin.users') }}" class="row g-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label fw-semibold">Filter by Role</label>
+                <select class="form-select" name="role">
+                    <option value="">All Roles</option>
+                    {% for r in roles %}
+                    <option value="{{ r }}" {% if current_role == r %}selected{% endif %}>{{ r|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary"><i class="fa-solid fa-filter me-1"></i> Filter</button>
+                {% if current_role %}
+                <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Clear</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- USERS TABLE -->
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Full Name</th>
+                        <th>Status</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.ID }}</td>
+                        <td><span class="badge bg-{{ 'primary' if user.Role == 'HR' else 'success' if user.Role == 'Interviewer' else 'warning' if user.Role == 'Admin' else 'info' if user.Role == 'Analyst' else 'secondary' }}">{{ user.Role }}</span></td>
+                        <td>{{ user.Email }}</td>
+                        <td>{{ user.FullName or '-' }}</td>
+                        <td>
+                            {% if user.IsActive %}
+                            <span class="badge bg-success">Active</span>
+                            {% else %}
+                            <span class="badge bg-danger">Locked</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <!-- Nút Lock/Unlock và Reset Password (nếu có) -->
+                            <!-- Bạn có thể thêm modal hoặc form POST ở đây -->
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No users found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PHÂN TRANG -->
+    {% if total_pages > 1 %}
+    <div class="card-footer bg-white d-flex justify-content-center pt-3 pb-2">
+        <nav aria-label="User pages">
+            <ul class="pagination mb-0 shadow-sm">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=page-1, role=current_role) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo; Previous</span>
+                    </a>
+                </li>
+                {% for p in range(1, total_pages + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=p, role=current_role) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.users', page=page+1, role=current_role) }}" aria-label="Next">
+                        <span aria-hidden="true">Next &raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

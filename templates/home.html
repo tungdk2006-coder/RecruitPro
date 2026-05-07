@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to RecruitPro{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 80px 0;
+        border-radius: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stats-card {
+        transition: transform 0.3s;
+        border: none;
+        border-radius: 1rem;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .job-card {
+        transition: box-shadow 0.3s, transform 0.3s;
+        height: 100%;
+    }
+    .job-card:hover {
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        transform: translateY(-3px);
+    }
+    .icon-wrapper {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section text-center px-4 shadow-sm">
+    <div class="container">
+        <i class="fa-solid fa-rocket fa-4x text-primary mb-4"></i>
+        <h1 class="display-4 fw-bold mb-3">Find Your Dream Job with RecruitPro</h1>
+        <p class="lead text-muted mb-5 max-w-75 mx-auto">
+            Connect with top employers, discover exciting opportunities, and take the next step in your career journey today.
+        </p>
+        
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('candidate.search_jobs') }}" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
+                <i class="fa-solid fa-search me-2"></i>Find Jobs
+            </a>
+            {% if not session.get('role') %}
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-secondary btn-lg px-5 rounded-pill">
+                    Sign Up Now
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Stats -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card stats-card shadow-sm h-100 bg-primary text-white">
+            <div class="card-body text-center p-4">
+                <div class="icon-wrapper bg-white text-primary mx-auto mb-3 shadow">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <h2 class="fw-bold mb-1">{{ total_jobs }}+</h2>
+                <p class="mb-0 fs-5">Active Positions</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card shadow-sm h-100 bg-info text-white">
+            <div class="card-body text-center p-4">
+                <div class="icon-wrapper bg-white text-info mx-auto mb-3 shadow">
+                    <i class="fa-solid fa-building"></i>
+                </div>
+                <h2 class="fw-bold mb-1">{{ total_employers }}+</h2>
+                <p class="mb-0 fs-5">Top Companies</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card stats-card shadow-sm h-100 bg-success text-white">
+            <div class="card-body text-center p-4">
+                <div class="icon-wrapper bg-white text-success mx-auto mb-3 shadow">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <h2 class="fw-bold mb-1">1-Click</h2>
+                <p class="mb-0 fs-5">Easy Application</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Jobs -->
+<div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold m-0"><i class="fa-solid fa-star text-warning me-2"></i>Featured Jobs</h3>
+        <a href="{{ url_for('candidate.search_jobs') }}" class="text-decoration-none">View All <i class="fa-solid fa-arrow-right ms-1"></i></a>
+    </div>
+    
+    <div class="row g-4">
+        {% for job in featured_jobs %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card job-card shadow-sm">
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title fw-bold text-truncate" title="{{ job.PositionName }}">{{ job.PositionName }}</h5>
+                            <span class="badge bg-primary rounded-pill">{{ job.JobType }}</span>
+                        </div>
+                        <h6 class="card-subtitle mb-3 text-muted">
+                            <i class="fa-regular fa-building me-1"></i>{{ job.EmployerName }}
+                        </h6>
+                        
+                        <div class="mb-3 text-secondary small flex-grow-1">
+                            <div class="mb-1"><i class="fa-solid fa-location-dot me-2"></i>{{ job.Location }}</div>
+                            <div class="mb-1"><i class="fa-solid fa-money-bill-wave me-2"></i>{{ "{:,.0f}".format(job.SalaryMin) if job.SalaryMin else '0' }} - {{ "{:,.0f}".format(job.SalaryMax) if job.SalaryMax else 'Negotiable' }} VND</div>
+                            <div><i class="fa-solid fa-briefcase me-2"></i>{{ job.ExperienceYears }} Yrs Exp</div>
+                        </div>
+                        
+                        <a href="{{ url_for('candidate.job_detail', id=job.PositionID) }}" class="btn btn-outline-primary w-100 mt-auto">Apply Now</a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="text-center p-5 bg-light rounded text-muted">
+                    <i class="fa-regular fa-folder-open fa-3x mb-3"></i>
+                    <h5>No featured jobs available right now.</h5>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

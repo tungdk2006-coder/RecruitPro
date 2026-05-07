@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Login - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="card auth-card">
+    <div class="card-body p-5">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">Welcome Back</h2>
+            <p class="text-muted">Sign in to continue to RecruitPro</p>
+        </div>
+        
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <div class="mb-3">
+                <label for="role" class="form-label fw-semibold">Login As</label>
+                <select class="form-select" id="role" name="role" required>
+                    <option value="Candidate" {% if role == 'Candidate' %}selected{% endif %}>Candidate</option>
+                    <option value="HR" {% if role == 'HR' %}selected{% endif %}>HR Manager</option>
+                    <option value="Interviewer" {% if role == 'Interviewer' %}selected{% endif %}>Interviewer</option>
+                    <option value="Analyst" {% if role == 'Analyst' %}selected{% endif %}>Analyst</option>
+                    <option value="Admin" {% if role == 'Admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="email" class="form-label fw-semibold">Email address</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ email or '' }}" required placeholder="name@example.com" autofocus>
+            </div>
+            
+            <div class="mb-4">
+                <label for="password" class="form-label fw-semibold">Password</label>
+                <div class="position-relative">
+                    <input type="password" class="form-control pe-5" id="password" name="password" required placeholder="••••••••">
+                    <span class="position-absolute top-50 end-0 translate-middle-y me-3 cursor-pointer" onclick="togglePassword('password', this)">
+                        <i class="fa-regular fa-eye text-muted"></i>
+                    </span>
+                </div>
+                
+                {% if login_error %}
+                    <div class="text-danger small mt-1 fw-semibold">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i> {{ login_error }}
+                    </div>
+                {% endif %}
+                
+                <div class="text-end mt-1">
+                    <a href="#" class="text-decoration-none small text-muted" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot password?</a>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 py-2">Sign In</button>
+        </form>
+        
+        <div class="text-center mt-4">
+            {% if login_error == 'Account not found' %}
+                <p class="mb-0 text-danger fw-semibold">Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-decoration-underline text-danger">Register here</a>.</p>
+            {% else %}
+                <p class="mb-0 text-muted">Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-decoration-none fw-semibold">Register as Candidate</a></p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Forgot Password Modal -->
+<div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="forgotPasswordModalLabel">Reset Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <i class="fa-solid fa-envelope-open-text fa-3x text-primary mb-3"></i>
+                <p class="mb-0">Please contact the system administrator at <strong>admin@recruitpro.com</strong> to reset your password.</p>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function togglePassword(inputId, iconSpan) {
+        const input = document.getElementById(inputId);
+        const icon = iconSpan.querySelector('i');
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}

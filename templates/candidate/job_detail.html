@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}{{ job['PositionName'] }} - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('candidate.search_jobs') }}" class="text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Back to Jobs</a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h2 class="fw-bold mb-1">{{ job['PositionName'] }}</h2>
+                        <h5 class="text-muted"><i class="fa-regular fa-building me-2"></i>{{ job['EmployerName'] }}</h5>
+                    </div>
+                    <div>
+                        {% if is_saved %}
+                        <form method="POST" action="{{ url_for('candidate.unsave_job', id=job['PositionID']) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-outline-danger">
+                                <i class="fa-solid fa-heart"></i> Saved
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('candidate.save_job', id=job['PositionID']) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="fa-regular fa-heart"></i> Save
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <span class="badge bg-primary fs-6"><i class="fa-solid fa-briefcase me-1"></i>{{ job['JobType'] }}</span>
+                    <span class="badge bg-success fs-6"><i class="fa-solid fa-money-bill-wave me-1"></i>VND {{ "{:,.0f}".format(job['SalaryMin']) if job['SalaryMin'] else '0' }} - VND {{ "{:,.0f}".format(job['SalaryMax']) if job['SalaryMax'] else 'Negotiable' }}</span>
+                    <span class="badge bg-info text-dark fs-6"><i class="fa-solid fa-location-dot me-1"></i>{{ job['Location'] }}</span>
+                    <span class="badge bg-secondary fs-6"><i class="fa-solid fa-industry me-1"></i>{{ job['IndustryName'] }}</span>
+                </div>
+
+                <h4 class="border-bottom pb-2 mb-3">Job Description</h4>
+                <div class="mb-4">
+                    <p><strong>Experience Required:</strong> {{ job['ExperienceYears'] }} years</p>
+                    <p><strong>Education Required:</strong> {{ job['EducationLevel'] }}</p>
+                    <p><strong>Openings:</strong> {{ job['Openings'] }}</p>
+                    <p><strong>Application Deadline:</strong> {{ job['Deadline'].strftime('%B %d, %Y') if job['Deadline'] else 'N/A' }}</p>
+                </div>
+
+                <h4 class="border-bottom pb-2 mb-3">Required Skills</h4>
+                <ul class="list-group mb-4">
+                    {% for req in reqs %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ req['SkillName'] }}
+                        <span>
+                            <span class="badge bg-secondary me-2">{{ req['RequiredLevel'] }}</span>
+                            {% if req['IsMandatory'] %}
+                                <span class="badge bg-danger">Mandatory</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Nice to have</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-muted">No specific skills listed.</li>
+                    {% endfor %}
+                </ul>
+
+                {% if not has_applied %}
+                <div class="mt-4 pt-3 border-top">
+                    <button type="button" class="btn btn-primary btn-lg px-5" data-bs-toggle="modal" data-bs-target="#applyModal">
+                        Apply Now
+                    </button>
+                </div>
+                {% else %}
+                <div class="alert alert-success mt-4">
+                    <i class="fa-solid fa-check-circle me-2"></i> You have already applied for this position. 
+                    <a href="{{ url_for('candidate.my_applications') }}" class="alert-link">View your applications</a>.
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title fw-bold">About {{ job['EmployerName'] }}</h5>
+                {% if job['CompanyDescription'] %}
+                    <p class="text-muted small">{{ job['CompanyDescription'] }}</p>
+                {% else %}
+                    <p class="text-muted fst-italic small">No description available.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('candidate.apply_job', id=job['PositionID']) }}" id="applyForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="applyModalLabel">Apply for <span class="text-primary">{{ job['PositionName'] }}</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Contact Info</label>
+                        <input type="text" class="form-control mb-2" value="{{ cand['CandidateName'] }}" disabled>
+                        <input type="text" class="form-control" value="{{ cand['Email'] }}" disabled>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Resume / CV</label>
+                        
+                        {% if cand['ResumeURL'] %}
+                        <div class="form-check mb-2 p-3 bg-light rounded border">
+                            <input class="form-check-input" type="radio" name="cv_option" id="cv_existing" value="existing" checked>
+                            <label class="form-check-label d-flex align-items-center" for="cv_existing">
+                                Use existing CV 
+                                <a href="{{ url_for('static', filename=cand['ResumeURL'].replace('static/', '').replace('\\', '/')) }}" target="_blank" class="ms-2 badge bg-primary text-decoration-none">View CV</a>
+                            </label>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-check p-3 bg-light rounded border">
+                            <input class="form-check-input" type="radio" name="cv_option" id="cv_new" value="new" {% if not cand['ResumeURL'] %}checked{% endif %}>
+                            <label class="form-check-label mb-2" for="cv_new">
+                                Upload new CV (PDF format)
+                            </label>
+                            <input class="form-control form-control-sm" type="file" id="cv_file" name="cv_file" accept=".pdf" {% if not cand['ResumeURL'] %}required{% endif %}>
+                            <div class="form-text small">This will replace your current profile CV.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cover Letter</label>
+                        <textarea class="form-control" name="cover_letter" rows="4" placeholder="Tell the employer why you are a great fit for this role..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4" id="submitApplyBtn">
+                        <span id="applyBtnText">Submit Application</span>
+                        <span id="applySpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Radio toggle logic for CV upload
+        const cvNewRadio = document.getElementById('cv_new');
+        const cvExistingRadio = document.getElementById('cv_existing');
+        const cvFileInput = document.getElementById('cv_file');
+        
+        if (cvNewRadio && cvExistingRadio) {
+            cvNewRadio.addEventListener('change', function() {
+                cvFileInput.required = true;
+            });
+            cvExistingRadio.addEventListener('change', function() {
+                cvFileInput.required = false;
+                cvFileInput.value = ''; // clear selection
+            });
+        }
+        
+        // Apply Form Spinner
+        const applyForm = document.getElementById('applyForm');
+        if (applyForm) {
+            applyForm.addEventListener('submit', function() {
+                document.getElementById('applyBtnText').classList.add('d-none');
+                document.getElementById('applySpinner').classList.remove('d-none');
+                document.getElementById('submitApplyBtn').disabled = true;
+            });
+        }
+    });
+</script>
+
+{% endblock %}

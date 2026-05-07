@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+{% block title %}HR Dashboard - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-gauge-high me-2"></i>HR Manager Dashboard</h2>
+    <a href="{{ url_for('hr.reports') }}" class="btn btn-outline-primary btn-sm">
+        <i class="fa-solid fa-chart-line me-1"></i> View Reports
+    </a>
+</div>
+
+<!-- QUICK STATS CARDS -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card border-start border-primary border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Open Positions</p>
+                        <h2 class="fw-bold mb-0">{{ stats.open_positions }}</h2>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                        <i class="fa-solid fa-briefcase fa-2x text-primary"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('hr.manage_jobs') }}" class="small mt-2 d-inline-block">Manage jobs →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-start border-success border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Active Applications</p>
+                        <h2 class="fw-bold mb-0">{{ stats.total_apps }}</h2>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                        <i class="fa-solid fa-users fa-2x text-success"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('hr.applications') }}" class="small mt-2 d-inline-block">View candidates →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card border-start border-warning border-4 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted mb-1">Offers Sent</p>
+                        <h2 class="fw-bold mb-0">{{ stats.total_offers }}</h2>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                        <i class="fa-solid fa-file-signature fa-2x text-warning"></i>
+                    </div>
+                </div>
+                <a href="{{ url_for('hr.applications') }}?status=Offered" class="small mt-2 d-inline-block">View offers →</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ACTIONABLE CARDS ROW -->
+<div class="row mb-4">
+    <!-- New Applications Today -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold"><i class="fa-solid fa-user-plus me-2 text-primary"></i>New Applications Today</h5>
+                <span class="badge bg-primary rounded-pill" id="newAppsCount">{{ today_new_apps|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div id="newAppsList" class="list-group list-group-flush">
+                    {% for app in today_new_apps %}
+                    <a href="{{ url_for('hr.candidate_detail', id=app.CandidateID) }}" class="list-group-item list-group-item-action app-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ app.CandidateName }}</h6>
+                                <small class="text-muted">{{ app.PositionName }}</small>
+                            </div>
+                            <small class="text-muted">{{ app.ApplicationDate.strftime('%H:%M') if app.ApplicationDate else '' }}</small>
+                        </div>
+                    </a>
+                    {% else %}
+                    <div class="text-center py-4 text-muted app-item">No new applications today</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if today_new_apps|length > 4 %}
+            <div class="card-footer text-center py-1">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="changePage('newApps', -1)">&laquo; Prev</button>
+                    <span class="btn btn-outline-secondary disabled" id="newAppsPageInfo">1/1</span>
+                    <button class="btn btn-outline-secondary" onclick="changePage('newApps', 1)">Next &raquo;</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Interviews Today & Tomorrow -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold"><i class="fa-solid fa-calendar-check me-2 text-success"></i>Interviews Today & Tomorrow</h5>
+                <span class="badge bg-success rounded-pill" id="interviewsCount">{{ today_interviews|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div id="interviewsList" class="list-group list-group-flush">
+                    {% for iv in today_interviews %}
+                    <div class="list-group-item interview-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ iv.CandidateName }}</h6>
+                                <small class="text-muted">{{ iv.PositionName }}</small>
+                            </div>
+                            <span class="badge bg-{% if iv.InterviewDate.date() == current_date %}warning text-dark{% else %}info{% endif %}">
+                                {{ iv.InterviewDate.strftime('%H:%M %d/%m') }}
+                            </span>
+                        </div>
+                        <div class="mt-1">
+                            <small class="text-muted">
+                                <i class="fa-solid fa-user-tie me-1"></i> {{ iv.InterviewType }} 
+                                {% if iv.Location %} | {{ iv.Location }}{% endif %}
+                            </small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted interview-item">No interviews scheduled</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if today_interviews|length > 4 %}
+            <div class="card-footer text-center py-1">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="changePage('interviews', -1)">&laquo; Prev</button>
+                    <span class="btn btn-outline-secondary disabled" id="interviewsPageInfo">1/1</span>
+                    <button class="btn btn-outline-secondary" onclick="changePage('interviews', 1)">Next &raquo;</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Expiring Offers -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-semibold"><i class="fa-solid fa-hourglass-half me-2 text-danger"></i>Expiring Offers</h5>
+                <span class="badge bg-danger rounded-pill" id="offersCount">{{ expiring_offers|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div id="offersList" class="list-group list-group-flush">
+                    {% for offer in expiring_offers %}
+                    <div class="list-group-item offer-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-0 fw-semibold">{{ offer.CandidateName }}</h6>
+                                <small class="text-muted">{{ offer.PositionName }}</small>
+                            </div>
+                            <span class="badge bg-danger">{{ offer.ValidUntil.strftime('%d/%m') }}</span>
+                        </div>
+                        <small class="text-muted">Salary: {{ "{:,.0f}".format(offer.BasicSalary) }} VND</small>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted offer-item">No expiring offers</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if expiring_offers|length > 4 %}
+            <div class="card-footer text-center py-1">
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary" onclick="changePage('offers', -1)">&laquo; Prev</button>
+                    <span class="btn btn-outline-secondary disabled" id="offersPageInfo">1/1</span>
+                    <button class="btn btn-outline-secondary" onclick="changePage('offers', 1)">Next &raquo;</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Trạng thái phân trang cho từng loại (chỉ số trang hiện tại, kích thước trang)
+    const pagination = {
+        newApps: { current: 0, size: 4 },
+        interviews: { current: 0, size: 4 },
+        offers: { current: 0, size: 4 }
+    };
+
+    // Hàm đổi trang cho một loại (type là 'newApps', 'interviews', 'offers')
+    function changePage(type, delta) {
+        const p = pagination[type];
+        const items = document.querySelectorAll(`.${type === 'newApps' ? 'app-item' : type === 'interviews' ? 'interview-item' : 'offer-item'}`);
+        // Nếu không có phần tử nào (empty state) thì không làm gì
+        if (items.length === 0) return;
+
+        const totalPages = Math.ceil(items.length / p.size);
+        p.current += delta;
+        if (p.current < 0) p.current = 0;
+        if (p.current >= totalPages) p.current = totalPages - 1;
+
+        // Ẩn tất cả, hiện các mục của trang hiện tại
+        const start = p.current * p.size;
+        const end = start + p.size;
+        items.forEach((item, index) => {
+            item.style.display = (index >= start && index < end) ? '' : 'none';
+        });
+
+        // Cập nhật thông tin trang
+        const infoElem = document.getElementById(`${type}PageInfo`);
+        if (infoElem) {
+            infoElem.textContent = `${p.current+1}/${totalPages}`;
+        }
+    }
+
+    // Khởi tạo hiển thị phân trang khi load trang
+    document.addEventListener('DOMContentLoaded', function() {
+        // Đặt tất cả item về ẩn, sau đó hiển thị trang đầu tiên
+        ['newApps', 'interviews', 'offers'].forEach(type => {
+            const p = pagination[type];
+            const selector = type === 'newApps' ? '.app-item' : type === 'interviews' ? '.interview-item' : '.offer-item';
+            const items = document.querySelectorAll(selector);
+            if (items.length > p.size) {
+                // Chỉ áp dụng phân trang nếu có nhiều hơn p.size phần tử
+                // Ẩn tất cả trước, rồi gọi changePage để hiển thị trang đầu
+                items.forEach(item => item.style.display = 'none');
+                p.current = 0; // reset
+                changePage(type, 0); // hiển thị trang đầu tiên
+            }
+            // Nếu ít hơn hoặc bằng p.size thì không cần phân trang, hiển thị tất cả
+        });
+    });
+</script>
+{% endblock %}

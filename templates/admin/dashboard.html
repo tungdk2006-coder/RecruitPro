@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - RecruitPro{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fa-solid fa-screwdriver-wrench me-2"></i>System Admin Panel</h2>
+
+<div class="row g-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+            <div class="card-body p-4 text-center">
+                <i class="fa-solid fa-industry fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">Manage Industries</h5>
+                <p class="card-text text-muted">Add or update industry categories used by employers and candidates.</p>
+                <a href="{{ url_for('admin.manage_industries') }}" class="btn btn-primary">Go to Industries</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+            <div class="card-body p-4 text-center">
+                <i class="fa-solid fa-users-gear fa-3x text-success mb-3"></i>
+                <h5 class="card-title">User Management</h5>
+                <p class="card-text text-muted">View, lock/unlock accounts, and reset passwords.</p>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-success">Manage Users</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+            <div class="card-body p-4 text-center">
+                <i class="fa-solid fa-clipboard-list fa-3x text-info mb-3"></i>
+                <h5 class="card-title">System Logs</h5>
+                <p class="card-text text-muted">View application status changes and interview audit trails.</p>
+                <div class="d-flex flex-column gap-2">
+                    <a href="{{ url_for('admin.application_logs') }}" class="btn btn-outline-info">Application Status Logs</a>
+                    <a href="{{ url_for('admin.interview_logs') }}" class="btn btn-outline-info">Interview Score Logs</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100 border-0 rounded-3">
+            <div class="card-body p-4 text-center">
+                <i class="fa-solid fa-cloud-arrow-up fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">Backup & Recovery</h5>
+                <p class="card-text text-muted">Backup application data and view recovery history.</p>
+                <a href="{{ url_for('admin.backup_page') }}" class="btn btn-warning">Go to Backup</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

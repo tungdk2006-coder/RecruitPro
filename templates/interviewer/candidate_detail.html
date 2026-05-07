@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Candidate Detail - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('interviewer.schedule') }}" class="text-decoration-none"><i class="fa-solid fa-arrow-left me-1"></i> Back to Schedule</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-4 text-center">
+        <h2 class="fw-bold">{{ candidate.CandidateName }}</h2>
+        <p class="text-muted mb-4">{{ candidate.Email }}</p>
+        
+        <div class="row text-start mb-4">
+            <div class="col-md-6 mb-3">
+                <strong>Education:</strong> {{ candidate.EducationLevel }}
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>Experience:</strong> {{ candidate.YearsOfExperience }} Years
+            </div>
+            <div class="col-md-6 mb-3">
+                <strong>GPA:</strong> {{ candidate.GPA }}
+            </div>
+        </div>
+        
+        {% if candidate.ResumeURL %}
+            <a href="{{ url_for('static', filename=candidate.ResumeURL.replace('static/', '').replace('\\', '/')) if 'static' in candidate.ResumeURL else '#' }}" target="_blank" class="btn btn-primary">
+                <i class="fa-solid fa-file-pdf me-2"></i>Download Resume
+            </a>
+        {% else %}
+            <p class="text-muted fst-italic">No resume uploaded.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

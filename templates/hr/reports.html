@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% block title %}HR Analytics Dashboard - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-chart-pie me-2"></i>Recruitment Analytics</h2>
+    <p class="text-muted">Real-time insights into your hiring pipeline</p>
+</div>
+
+<!-- QUICK STATS CARDS -->
+<div class="row mb-4" id="statsCards">
+    <div class="col-md-3 mb-3">
+        <div class="card border-primary shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Total Applications</p>
+                        <h3 class="fw-bold" id="statTotalApps">--</h3>
+                    </div>
+                    <i class="fa-solid fa-users fa-2x text-primary opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card border-success shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Total Offers</p>
+                        <h3 class="fw-bold" id="statTotalOffers">--</h3>
+                    </div>
+                    <i class="fa-solid fa-file-signature fa-2x text-success opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card border-info shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Offer Acceptance Rate</p>
+                        <h3 class="fw-bold" id="statAcceptRate">--%</h3>
+                    </div>
+                    <i class="fa-solid fa-check-circle fa-2x text-info opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card border-warning shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Conversion Rate</p>
+                        <h3 class="fw-bold" id="statConversion">--%</h3>
+                    </div>
+                    <i class="fa-solid fa-chart-line fa-2x text-warning opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS ROW -->
+<div class="row mb-4">
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold"><i class="fa-solid fa-filter me-2"></i>Recruitment Funnel</div>
+            <div class="card-body"><canvas id="funnelChart" height="300"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow-sm">
+            <div class="card-header fw-semibold">
+                <i class="fa-solid fa-calendar-alt me-2"></i>Applications by Month (2026)
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TIME FILTER (đặt ngay trên các bảng) -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body py-2">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <label class="form-label mb-0 fw-semibold"><i class="fa-solid fa-calendar me-1"></i>View Period</label>
+                <select class="form-select form-select-sm d-inline-block w-auto" id="periodSelect" onchange="onPeriodChange()">
+                    <option value="all" selected>All Time</option>
+                    <option value="this_month">Specific Month</option>
+                </select>
+            </div>
+            <div class="col-auto" id="monthPickerGroup" style="display: none;">
+                <select class="form-select form-select-sm d-inline-block w-auto" id="monthSelect" onchange="loadTables()">
+                    <option value="1">January</option>
+                    <option value="2">February</option>
+                    <option value="3">March</option>
+                    <option value="4">April</option>
+                    <option value="5" selected>May</option>
+                    <option value="6">June</option>
+                    <option value="7">July</option>
+                    <option value="8">August</option>
+                    <option value="9">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+                <input type="number" class="form-control form-control-sm d-inline-block w-auto ms-1" 
+                    id="yearInput" value="2026" style="width:80px;" onchange="loadTables()">
+            </div>
+        </div>
+    </div>
+
+<!-- INTERVIEWER PERFORMANCE TABLE -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold"><i class="fa-solid fa-user-tie me-2"></i>Interviewer Performance</div>
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr><th>Interviewer</th><th>Interviews</th><th>Avg Score</th><th>Passes</th><th>Fails</th><th>Pass Rate</th></tr>
+            </thead>
+            <tbody id="interviewerBody"><tr><td colspan="6" class="text-center">Loading...</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- JOB ANALYTICS TABLE -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold"><i class="fa-solid fa-briefcase me-2"></i>Job Performance</div>
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr><th>Position</th><th>Applications</th><th>Hired</th><th>Conversion Rate</th><th>Avg Time to Hire (days)</th></tr>
+            </thead>
+            <tbody id="jobBody"><tr><td colspan="5" class="text-center">Loading...</td></tr></tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Hiển thị/ẩn input month khi chọn period
+    function onPeriodChange() {
+        const period = document.getElementById('periodSelect').value;
+        const monthGroup = document.getElementById('monthPickerGroup');
+        monthGroup.style.display = (period === 'this_month') ? 'block' : 'none';
+        loadTables();
+    }
+
+    // Tải thống kê nhanh (không phụ thuộc period)
+    fetch('/hr/api/overview-stats')
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('statTotalApps').innerText = data.total_apps;
+            document.getElementById('statTotalOffers').innerText = data.total_offers;
+            document.getElementById('statAcceptRate').innerText = data.offer_accept_rate + '%';
+            document.getElementById('statConversion').innerText = data.conversion_rate + '%';
+        });
+
+    // Biểu đồ Funnel
+    fetch('/hr/api/funnel-data')
+        .then(res => res.json())
+        .then(data => {
+            const ctx = document.getElementById('funnelChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Applied', 'Screened', 'Interviewed', 'Offered', 'Hired'],
+                    datasets: [{
+                        label: 'Candidates',
+                        data: [data.Applied, data.Screened, data.Interviewed, data.Offered, data.Hired],
+                        backgroundColor: ['#007bff','#6c757d','#17a2b8','#ffc107','#28a745']
+                    }]
+                },
+                options: { responsive: true }
+            });
+        });
+
+    // Biểu đồ ứng viên theo tháng
+    // Khai báo biến toàn cục cho biểu đồ
+    let monthlyChart = null;
+
+    function loadMonthlyChart() {
+        fetch('/hr/api/monthly-trends')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const ctx = document.getElementById('monthlyChart').getContext('2d');
+                // Hủy biểu đồ cũ nếu tồn tại và là instance của Chart
+                if (monthlyChart instanceof Chart) {
+                    monthlyChart.destroy();
+                }
+                // Tạo biểu đồ mới
+                monthlyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels,   // ["January", "February", ...]
+                        datasets: [
+                            {
+                                label: 'Applications',
+                                data: data.applications,
+                                backgroundColor: '#007bff'
+                            },
+                            {
+                                label: 'Hired',
+                                data: data.hired,
+                                backgroundColor: '#28a745'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading monthly chart:', error);
+            });
+    }
+
+    // Gọi khi trang đã sẵn sàng
+    document.addEventListener('DOMContentLoaded', function() {
+        loadMonthlyChart();
+    });
+
+    // Hàm load dữ liệu cho hai bảng dựa vào bộ lọc
+    function loadTables() {
+        const period = document.getElementById('periodSelect').value;
+        let interviewerUrl = '/hr/api/interviewer-stats?period=' + period;
+        let jobUrl = '/hr/api/job-stats?period=' + period;
+
+        if (period === 'this_month') {
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearInput').value;
+            interviewerUrl += '&year=' + year + '&month=' + month;
+            jobUrl += '&year=' + year + '&month=' + month;
+        }
+
+        // Interviewer Table
+        fetch(interviewerUrl)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('interviewerBody');
+                if (!data.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center">No data for selected period.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(r => `
+                    <tr>
+                        <td>${r.FullName}</td>
+                        <td>${r.TotalInterviews}</td>
+                        <td>${r.AvgScore ?? '-'}</td>
+                        <td>${r.Passes}</td>
+                        <td>${r.Fails}</td>
+                        <td>${ r.TotalInterviews ? (r.Passes/r.TotalInterviews*100).toFixed(1)+'%' : '-' }</td>
+                    </tr>
+                `).join('');
+            });
+
+        // Job Table
+        fetch(jobUrl)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('jobBody');
+                if (!data.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No data for selected period.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.map(r => `
+                    <tr>
+                        <td>${r.PositionName}</td>
+                        <td>${r.TotalApplications}</td>
+                        <td>${r.Hired}</td>
+                        <td>${r.ConversionRate}%</td>
+                        <td>${r.AvgTimeToHire ?? 'N/A'}</td>
+                    </tr>
+                `).join('');
+            });
+    }
+
+    // Load lần đầu
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTables();
+    });
+</script>
+{% endblock %}

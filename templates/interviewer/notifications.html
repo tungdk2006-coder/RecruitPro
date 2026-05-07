@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}My Notifications - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-bell me-2"></i>My Notifications</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        {% if notifications %}
+        <div class="list-group list-group-flush" id="notificationsList">
+            {% for notif in notifications %}
+            <div class="list-group-item d-flex justify-content-between align-items-start flex-column flex-md-row notification-item 
+                     {% if not notif.IsRead %}bg-primary bg-opacity-10 fw-semibold{% else %}text-muted bg-light{% endif %}"
+                id="notif-{{ notif.NotifID }}">
+                <div class="me-3">
+                    <p class="mb-1">{{ notif.Message }}</p>
+                    <small class="text-muted">{{ notif.CreatedAt.strftime('%H:%M %d/%m/%Y') if notif.CreatedAt else ''
+                        }}</small>
+                </div>
+                <div class="mt-2 mt-md-0 d-flex align-items-center">
+                    <a href="{{ url_for('interviewer.schedule') }}?highlight={{ notif.RelatedID if notif.RelatedID else '' }}"
+                        class="btn btn-sm btn-outline-info me-2">View Details</a>
+                    {% if not notif.IsRead %}
+                    <button type="button" class="btn btn-sm btn-outline-secondary mark-read-btn"
+                        data-notif-id="{{ notif.NotifID }}" onclick="markAsRead({{ notif.NotifID }}, this)">
+                        Mark Read
+                    </button>
+                    {% else %}
+                    <span class="badge bg-secondary">Read</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-bell-slash fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No notifications yet.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function markAsRead(notifId, btn) {
+        fetch(`/interviewer/notifications/read/${notifId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const item = document.getElementById(`notif-${notifId}`);
+                    item.classList.remove('bg-primary', 'bg-opacity-10', 'fw-semibold');
+                    item.classList.add('text-muted', 'bg-light');
+
+                    btn.parentElement.innerHTML = '<span class="badge bg-secondary">Read</span>';
+
+                    updateNavbarBadge();
+                }
+            });
+    }
+
+    function updateNavbarBadge() {
+        fetch('/interviewer/notifications/unread-count')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.querySelector('.navbar .badge.bg-danger');
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.textContent = data.count;
+                    } else {
+                        badge.remove();
+                    }
+                }
+            });
+    }
+</script>
+{% endblock %}

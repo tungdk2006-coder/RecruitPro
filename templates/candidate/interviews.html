@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}My Interviews - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-calendar-check me-2"></i>My Interviews</h2>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Date & Time</th>
+                        <th>Job Title</th>
+                        <th>Round</th>
+                        <th>Type</th>
+                        <th>Location/Link</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for intv in interviews %}
+                    <tr>
+                        <td class="ps-4 fw-semibold">{{ intv.InterviewDate.strftime('%Y-%m-%d %H:%M') if intv.InterviewDate else 'TBD' }}</td>
+                        <td>
+                            <a href="{{ url_for('candidate.job_detail', id=intv.PositionID) }}" class="text-decoration-none">
+                                {{ intv.PositionName }}
+                            </a>
+                        </td>
+                        <td>{{ intv.RoundNumber }}</td>
+                        <td><span class="badge bg-secondary">{{ intv.InterviewType }}</span></td>
+                        <td>
+                            {% if 'http' in intv.Location %}
+                                <a href="{{ intv.Location }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="fa-solid fa-video me-1"></i>Join Link</a>
+                            {% else %}
+                                {{ intv.Location }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if intv.Result == 'Pass' %} bg-success
+                                {% elif intv.Result == 'Fail' %} bg-danger
+                                {% else %} bg-warning text-dark {% endif %}
+                            ">
+                                {{ intv.Result }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="fa-regular fa-calendar-xmark fa-3x mb-3"></i>
+                            <p class="mb-0">You have no upcoming or past interviews.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

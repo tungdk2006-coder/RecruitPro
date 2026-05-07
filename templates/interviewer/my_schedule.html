@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}My Schedule - RecruitPro{% endblock %}
+
+{% block content %}
+<h2 class="fw-bold mb-4"><i class="fa-solid fa-calendar-days me-2"></i>My Schedule</h2>
+
+<!-- Filter Bar -->
+<div class="row mb-3" id="filterBar">
+    <div class="col-md-3">
+        <input type="text" class="form-control" id="searchCandidate" placeholder="Search candidate..."
+            onkeyup="filterTable()">
+    </div>
+    <div class="col-md-2">
+        <input type="date" class="form-control" id="filterDate" onchange="filterTable()">
+    </div>
+    <div class="col-md-2">
+        <select class="form-select" id="filterStatus" onchange="filterTable()">
+            <option value="">All Results</option>
+            <option value="Pass">Pass</option>
+            <option value="Fail">Fail</option>
+            <option value="Pending">Pending</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <input type="text" class="form-control" id="filterPosition" placeholder="Position..." onkeyup="filterTable()">
+    </div>
+</div>
+
+<ul class="nav nav-tabs" id="scheduleTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button"
+            role="tab">Upcoming ({{ upcoming|length }})</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab">Past
+            ({{ past|length }})</button>
+    </li>
+</ul>
+
+<div class="tab-content mt-3" id="scheduleTabsContent">
+    <!-- Tab Upcoming -->
+    <div class="tab-pane fade show active" id="upcoming" role="tabpanel">
+        {% if upcoming %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="upcomingTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Candidate</th>
+                        <th>Position</th>
+                        <th>Type</th>
+                        <th>Round</th>
+                        <!-- ĐÃ XÓA CỘT FEEDBACK -->
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for iv in upcoming %}
+                    <tr id="interview-row-{{ iv.InterviewID }}" class="filter-row"
+                        data-candidate="{{ iv.CandidateName|lower }}"
+                        data-date="{{ iv.InterviewDate.strftime('%Y-%m-%d') if iv.InterviewDate else '' }}"
+                        data-status="{{ iv.Result }}" data-position="{{ iv.PositionName|lower }}">
+                        <td>{{ iv.InterviewDate.strftime('%H:%M %d/%m/%Y') if iv.InterviewDate else '' }}</td>
+                        <td>
+                            <a href="{{ url_for('interviewer.view_candidate', id=iv.InterviewID) }}">{{ iv.CandidateName
+                                }}</a>
+                        </td>
+                        <td>{{ iv.PositionName }}</td>
+                        <td>{{ iv.InterviewType }}</td>
+                        <td>{{ iv.RoundNumber }}</td>
+                        <!-- KHÔNG CÒN NÚT FEEDBACK -->
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-calendar-check fa-3x mb-3"></i>
+            <p>No upcoming interviews.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Tab Past -->
+    <div class="tab-pane fade" id="past" role="tabpanel">
+        {% if past %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="pastTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Date & Time</th>
+                        <th>Candidate</th>
+                        <th>Position</th>
+                        <th>Result</th>
+                        <th>Score</th>
+                        <th>Feedback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for iv in past %}
+                    <tr id="interview-row-{{ iv.InterviewID }}" class="filter-row"
+                        data-candidate="{{ iv.CandidateName|lower }}"
+                        data-date="{{ iv.InterviewDate.strftime('%Y-%m-%d') if iv.InterviewDate else '' }}"
+                        data-status="{{ iv.Result }}" data-position="{{ iv.PositionName|lower }}">
+                        <td>{{ iv.InterviewDate.strftime('%H:%M %d/%m/%Y') if iv.InterviewDate else '' }}</td>
+                        <td>{{ iv.CandidateName }}</td>
+                        <td>{{ iv.PositionName }}</td>
+                        <td>
+                            {% if iv.Result == 'Pass' %}
+                            <span class="badge bg-success">Pass</span>
+                            {% elif iv.Result == 'Fail' %}
+                            <span class="badge bg-danger">Fail</span>
+                            {% else %}
+                            <span class="badge bg-secondary">{{ iv.Result }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ iv.Score if iv.Score else '-' }}</td>
+                        <td>
+                            {% if iv.Note %}
+                            <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
+                                data-bs-target="#feedbackPastModal{{ iv.InterviewID }}">
+                                <i class="fa-solid fa-eye"></i> View
+                            </button>
+                            {% else %}
+                            <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <!-- Modal xem Feedback Past (đặt ngay trong vòng lặp để dễ quản lý) -->
+                    {% if iv.Note %}
+                    <div class="modal fade" id="feedbackPastModal{{ iv.InterviewID }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Feedback: {{ iv.CandidateName }} - {{ iv.PositionName }}
+                                    </h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>
+                                        <strong>Result:</strong>
+                                        {% if iv.Result == 'Pass' %}
+                                        <span class="badge bg-success">Pass</span>
+                                        {% elif iv.Result == 'Fail' %}
+                                        <span class="badge bg-danger">Fail</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ iv.Result }}</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Score:</strong> {{ iv.Score if iv.Score else '-' }}</p>
+                                    <p><strong>Feedback Details:</strong></p>
+                                    <div class="border p-3 bg-light" style="white-space: pre-wrap;">{{ iv.Note }}</div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+            <i class="fa-solid fa-clock-rotate-left fa-3x mb-3"></i>
+            <p>No past interviews.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Feedback Modals for Past Interviews (Xem lại) -->
+{% for iv in past %}
+{% if iv.Note %}
+<div class="modal fade" id="feedbackPastModal{{ iv.InterviewID }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Feedback: {{ iv.CandidateName }} - {{ iv.PositionName }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    <strong>Result:</strong>
+                    {% if iv.Result == 'Pass' %}
+                    <span class="badge bg-success">Pass</span>
+                    {% elif iv.Result == 'Fail' %}
+                    <span class="badge bg-danger">Fail</span>
+                    {% else %}
+                    <span class="badge bg-secondary">{{ iv.Result }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Score:</strong> {{ iv.Score if iv.Score else '-' }}</p>
+                <p><strong>Feedback Details:</strong></p>
+                <div class="border p-3 bg-light" style="white-space: pre-wrap;">{{ iv.Note }}</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const highlightId = getQueryParam('highlight');
+        if (highlightId) {
+            const row = document.getElementById(`interview-row-${highlightId}`);
+            if (row) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.classList.add('table-warning');
+                setTimeout(() => { row.classList.remove('table-warning'); }, 5000);
+            }
+        }
+    });
+
+    function filterTable() {
+        const search = document.getElementById('searchCandidate').value.toLowerCase();
+        const date = document.getElementById('filterDate').value;
+        const status = document.getElementById('filterStatus').value;
+        const position = document.getElementById('filterPosition').value.toLowerCase();
+
+        const rows = document.querySelectorAll('.filter-row');
+        rows.forEach(row => {
+            const candidate = row.getAttribute('data-candidate') || '';
+            const rowDate = row.getAttribute('data-date') || '';
+            const rowStatus = row.getAttribute('data-status') || '';
+            const rowPosition = row.getAttribute('data-position') || '';
+
+            let show = true;
+            if (search && !candidate.includes(search)) show = false;
+            if (date && rowDate !== date) show = false;
+            if (status && rowStatus !== status) show = false;
+            if (position && !rowPosition.includes(position)) show = false;
+
+            row.style.display = show ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Application Status Logs - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-clock-rotate-left me-2"></i>Application Status Changes</h2>
+    <p class="text-muted">Audit log of all application status updates.</p>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Log ID</th>
+                        <th>Application ID</th>
+                        <th>Old Status</th>
+                        <th>New Status</th>
+                        <th>Changed At</th>
+                        <th>Changed By</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.LogID }}</td>
+                        <td>{{ log.ApplicationID }}</td>
+                        <td><span class="badge bg-warning text-dark">{{ log.OldStatus }}</span></td>
+                        <td><span class="badge bg-info">{{ log.NewStatus }}</span></td>
+                        <td>{{ log.ChangedAt.strftime('%Y-%m-%d %H:%M') if log.ChangedAt else '' }}</td>
+                        <td>{{ log.ChangedBy }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">No log entries found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div class="card-footer bg-white d-flex justify-content-center pt-3 pb-2">
+        <nav aria-label="Log pages">
+            <ul class="pagination mb-0">
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.application_logs', page=page-1) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo; Previous</span>
+                    </a>
+                </li>
+                {% set start = [page - 2, 1] | max %}
+                {% set end = [page + 2, total_pages] | min %}
+                {% if start > 1 %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('admin.application_logs', page=1) }}">1</a></li>
+                {% if start > 2 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+                {% endif %}
+                {% for p in range(start, end + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.application_logs', page=p) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                {% if end < total_pages %}
+                {% if end < total_pages - 1 %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('admin.application_logs', page=total_pages) }}">{{ total_pages }}</a></li>
+                {% endif %}
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.application_logs', page=page+1) }}" aria-label="Next">
+                        <span aria-hidden="true">Next &raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

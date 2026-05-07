@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+
+{% block title %}Find Jobs - RecruitPro{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold"><i class="fa-solid fa-magnifying-glass text-primary me-2"></i>Find Your Dream Job</h2>
+</div>
+
+<!-- Search Filters -->
+<div class="card shadow-sm mb-4 border-0 rounded-3">
+    <div class="card-body p-4 bg-light">
+        <form method="GET" action="{{ url_for('candidate.search_jobs') }}" id="searchForm">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Keyword</label>
+                    <input type="text" name="keyword" class="form-control" placeholder="e.g. Software Engineer" value="{{ request.args.get('keyword', '') }}" list="jobTitlesList">
+                    <datalist id="jobTitlesList"></datalist>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Industry</label>
+                    <select name="industry" class="form-select">
+                        <option value="">All Industries</option>
+                        {% for ind in industries %}
+                            <option value="{{ ind.IndustryName }}" {% if request.args.get('industry') == ind.IndustryName %}selected{% endif %}>{{ ind.IndustryName }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Location</label>
+                    <select name="location" class="form-select">
+                        <option value="">All Locations</option>
+                        {% for loc in locations %}
+                            <option value="{{ loc.Location }}" {% if request.args.get('location') == loc.Location %}selected{% endif %}>{{ loc.Location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Job Type</label>
+                    <select name="job_type" class="form-select">
+                        <option value="">All Types</option>
+                        <option value="Full-time" {% if request.args.get('job_type') == 'Full-time' %}selected{% endif %}>Full-time</option>
+                        <option value="Part-time" {% if request.args.get('job_type') == 'Part-time' %}selected{% endif %}>Part-time</option>
+                        <option value="Contract" {% if request.args.get('job_type') == 'Contract' %}selected{% endif %}>Contract</option>
+                        <option value="Internship" {% if request.args.get('job_type') == 'Internship' %}selected{% endif %}>Internship</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Salary Range</label>
+                    <select name="salary" class="form-select">
+                        <option value="">Any Salary</option>
+                        <option value="under_5" {% if request.args.get('salary') == 'under_5' %}selected{% endif %}>Under 5 Million VND</option>
+                        <option value="5_10" {% if request.args.get('salary') == '5_10' %}selected{% endif %}>5 - 10 Million VND</option>
+                        <option value="10_20" {% if request.args.get('salary') == '10_20' %}selected{% endif %}>10 - 20 Million VND</option>
+                        <option value="over_20" {% if request.args.get('salary') == 'over_20' %}selected{% endif %}>Over 20 Million VND</option>
+                    </select>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100" id="searchBtn">
+                        <span id="searchBtnText"><i class="fa-solid fa-filter me-2"></i>Apply Filters</span>
+                        <span id="searchSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="row g-4">
+    {% if jobs %}
+        {% for job in jobs %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm job-card">
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title fw-bold text-truncate mb-0" title="{{ job.PositionName }}">{{ job.PositionName }}</h5>
+                            
+                            <!-- Save/Unsave Form -->
+                            {% if job.PositionID in saved_jobs %}
+                                <form action="{{ url_for('candidate.unsave_job', id=job.PositionID) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-link text-danger p-0" title="Unsave Job">
+                                        <i class="fa-solid fa-heart fs-5"></i>
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form action="{{ url_for('candidate.save_job', id=job.PositionID) }}" method="POST" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-link text-muted p-0" title="Save Job">
+                                        <i class="fa-regular fa-heart fs-5"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                        
+                        <h6 class="card-subtitle mb-3 text-muted"><i class="fa-regular fa-building me-1"></i>{{ job.EmployerName }}</h6>
+                        
+                        <div class="mb-3 flex-grow-1 text-secondary small">
+                            <div class="mb-1"><i class="fa-solid fa-tag me-2"></i>{{ job.IndustryName }} | {{ job.JobType }}</div>
+                            <div class="mb-1"><i class="fa-solid fa-location-dot me-2"></i>{{ job.Location }}</div>
+                            <div class="mb-1 fw-semibold text-success">
+                                <i class="fa-solid fa-money-bill-wave me-2"></i>
+                                {{ "{:,.0f}".format(job.SalaryMin) if job.SalaryMin else '0' }} - {{ "{:,.0f}".format(job.SalaryMax) if job.SalaryMax else 'Negotiable' }} VND
+                            </div>
+                            <div class="mb-1"><i class="fa-solid fa-briefcase me-2"></i>{{ job.ExperienceYears }} Yrs Exp required</div>
+                        </div>
+                        
+                        <div class="d-flex gap-2 mt-auto">
+                            <a href="{{ url_for('candidate.job_detail', id=job.PositionID) }}" class="btn btn-outline-primary w-50">View Details</a>
+                            <button type="button" class="btn btn-primary w-50" data-bs-toggle="modal" data-bs-target="#applyModal" data-job-id="{{ job.PositionID }}" data-job-title="{{ job.PositionName }}">
+                                Apply
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        
+        <!-- Pagination Controls -->
+        {% if total_pages > 1 %}
+        <div class="col-12 mt-4 d-flex justify-content-center">
+            <nav aria-label="Job search results pages">
+                <ul class="pagination shadow-sm">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('candidate.search_jobs', page=page-1, keyword=request.args.get('keyword'), industry=request.args.get('industry'), location=request.args.get('location'), job_type=request.args.get('job_type'), salary=request.args.get('salary')) }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo; Previous</span>
+                        </a>
+                    </li>
+                    
+                    <li class="page-item disabled"><span class="page-link">Page {{ page }} of {{ total_pages }}</span></li>
+                    
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('candidate.search_jobs', page=page+1, keyword=request.args.get('keyword'), industry=request.args.get('industry'), location=request.args.get('location'), job_type=request.args.get('job_type'), salary=request.args.get('salary')) }}" aria-label="Next">
+                            <span aria-hidden="true">Next &raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+        
+    {% else %}
+        <div class="col-12 text-center py-5">
+            <div class="d-inline-block bg-light rounded-circle p-4 mb-3">
+                <i class="fa-solid fa-magnifying-glass-minus fa-3x text-secondary"></i>
+            </div>
+            <h4 class="text-muted fw-bold">Không tìm thấy công việc phù hợp</h4>
+            <p class="text-muted">Hãy thử điều chỉnh bộ lọc (keyword, location, salary...) để tìm thêm cơ hội.</p>
+            <a href="{{ url_for('candidate.search_jobs') }}" class="btn btn-outline-secondary mt-2">Clear Filters</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Apply Modal -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-labelledby="applyModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="" method="POST" id="applyForm" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-bold" id="applyModalLabel">Apply for <span id="modalJobTitle" class="text-primary">Job</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Contact Info</label>
+                        <input type="text" class="form-control mb-2" value="{{ cand.CandidateName }}" disabled>
+                        <input type="text" class="form-control" value="{{ cand.Email }}" disabled>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Resume / CV</label>
+                        
+                        {% if cand.ResumeURL %}
+                        <div class="form-check mb-2 p-3 bg-light rounded border">
+                            <input class="form-check-input" type="radio" name="cv_option" id="cv_existing" value="existing" checked>
+                            <label class="form-check-label d-flex align-items-center" for="cv_existing">
+                                Use existing CV 
+                                <a href="{{ url_for('static', filename=cand.ResumeURL.replace('static/', '').replace('\\', '/')) }}" target="_blank" class="ms-2 badge bg-primary text-decoration-none">View CV</a>
+                            </label>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="form-check p-3 bg-light rounded border">
+                            <input class="form-check-input" type="radio" name="cv_option" id="cv_new" value="new" {% if not cand.ResumeURL %}checked{% endif %}>
+                            <label class="form-check-label mb-2" for="cv_new">
+                                Upload new CV (PDF format)
+                            </label>
+                            <input class="form-control form-control-sm" type="file" id="cv_file" name="cv_file" accept=".pdf" {% if not cand.ResumeURL %}required{% endif %}>
+                            <div class="form-text small">This will replace your current profile CV.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cover Letter</label>
+                        <textarea class="form-control" name="cover_letter" rows="4" placeholder="Tell the employer why you are a great fit for this role..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary px-4" id="submitApplyBtn">
+                        <span id="applyBtnText">Submit Application</span>
+                        <span id="applySpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search Form Spinner
+        const searchForm = document.getElementById('searchForm');
+        searchForm.addEventListener('submit', function() {
+            document.getElementById('searchBtnText').classList.add('d-none');
+            document.getElementById('searchSpinner').classList.remove('d-none');
+            document.getElementById('searchBtn').disabled = true;
+        });
+        
+        // Modal Setup
+        const applyModal = document.getElementById('applyModal');
+        if (applyModal) {
+            applyModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const jobId = button.getAttribute('data-job-id');
+                const jobTitle = button.getAttribute('data-job-title');
+                
+                document.getElementById('modalJobTitle').textContent = jobTitle;
+                // Set the form action dynamically to the apply endpoint
+                document.getElementById('applyForm').action = "{{ url_for('candidate.search_jobs') }}".replace('/jobs', '/job/' + jobId + '/apply');
+            });
+        }
+        
+        // Radio toggle logic for CV upload
+        const cvNewRadio = document.getElementById('cv_new');
+        const cvExistingRadio = document.getElementById('cv_existing');
+        const cvFileInput = document.getElementById('cv_file');
+        
+        if (cvNewRadio && cvExistingRadio) {
+            cvNewRadio.addEventListener('change', function() {
+                cvFileInput.required = true;
+            });
+            cvExistingRadio.addEventListener('change', function() {
+                cvFileInput.required = false;
+                cvFileInput.value = ''; // clear selection
+            });
+        }
+        
+        // Apply Form Spinner
+        const applyForm = document.getElementById('applyForm');
+        if (applyForm) {
+            applyForm.addEventListener('submit', function() {
+                document.getElementById('applyBtnText').classList.add('d-none');
+                document.getElementById('applySpinner').classList.remove('d-none');
+                document.getElementById('submitApplyBtn').disabled = true;
+            });
+        }
+        
+        // Fetch Job Titles for Autocomplete
+        fetch("{{ url_for('candidate.api_job_titles') }}")
+            .then(response => response.json())
+            .then(data => {
+                const datalist = document.getElementById('jobTitlesList');
+                if (datalist) {
+                    data.forEach(title => {
+                        let option = document.createElement('option');
+                        option.value = title;
+                        datalist.appendChild(option);
+                    });
+                }
+            })
+            .catch(err => console.error('Error fetching job titles:', err));
+    });
+</script>
+<style>
+    .job-card { transition: box-shadow 0.3s, transform 0.3s; }
+    .job-card:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; transform: translateY(-3px); }
+</style>
+{% endblock %}
