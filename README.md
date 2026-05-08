@@ -64,6 +64,7 @@ The system supports the complete recruitment lifecycle: job posting, candidate a
 - **Soft‑Delete:** Most entities use an `IsDeleted` flag, enabling data recovery and preserving referential integrity.
 - **Advanced Objects:**
   - **Views:** `View_ApplicationSummary`, `View_TopCandidates`, `View_InterviewerWorkload`, `View_StageConversionRates`, etc.
+  - **Indexes:** `idx_app_candidate_pos`, `idx_job_requirements_skill`, `idx_job_employer`, `unique_saved`, etc.
   - **Stored Procedures:** encapsulate core business logic (e.g., `sp_ScheduleInterview`, `sp_RecordInterviewResult`, `sp_SubmitApplication`).
   - **Triggers:** automatically update application statuses, write audit logs, and push notifications to candidates and interviewers.
   - **Functions:** `fn_GetAge`, `fn_IsEligible`, `fn_AvgInterviewScore`, etc.
