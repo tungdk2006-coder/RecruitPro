@@ -49,7 +49,6 @@ def call_procedure_out(proc_name, args):
     finally:
         cursor.close()
         db.close()
-        
     return results, args_list
 
 def query_db(query, args=(), one=False):

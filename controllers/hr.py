@@ -198,15 +198,29 @@ def edit_job(id):
 @login_required('HR')
 def delete_position(id):
     emp_id = session['employer_id']
+    conn = None
+    cursor = None
     try:
-        job = query_db("SELECT 1 FROM JobPositions WHERE PositionID = %s AND EmployerID = %s", (id, emp_id), one=True)
-        if job:
-            query_db("UPDATE JobPositions SET IsDeleted = TRUE WHERE PositionID = %s", (id,))
-            flash("Position deleted.", "success")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Kiểm tra quyền sở hữu
+        cursor.execute("SELECT 1 FROM JobPositions WHERE PositionID = %s AND EmployerID = %s", (id, emp_id))
+        if not cursor.fetchone():
+            flash("Job not found or unauthorized.", "danger")
         else:
-            flash("Unauthorized.", "danger")
-    except:
-        flash("Error deleting position.", "danger")
+            cursor.execute("UPDATE JobPositions SET IsDeleted = TRUE WHERE PositionID = %s", (id,))
+            conn.commit()
+            flash("Job deleted successfully.", "success")
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        flash(f"Error deleting job: {str(e)}", "danger")
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
     return redirect(url_for('hr.manage_jobs'))
 
 # ============================================================
