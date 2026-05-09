@@ -183,7 +183,7 @@ Candidate ranking and CV parsing.
 
 Mobile application.
 
-7Author
+7. Author
 Name: Nguyễn Trùng Tùng
 
 Student ID: 11245950
@@ -196,3 +196,6 @@ Institution: National Economics University (NEU), College of Technology
 
 8. License
 This project is submitted as a university assignment. Feel free to use it for educational purposes.
+
+9. Video demenstration:
+https://youtu.be/Y2mM64pC_CI
