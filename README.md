@@ -64,6 +64,7 @@ The system supports the complete recruitment lifecycle: job posting, candidate a
 - **Soft‑Delete:** Most entities use an `IsDeleted` flag, enabling data recovery and preserving referential integrity.
 - **Advanced Objects:**
   - **Views:** `View_ApplicationSummary`, `View_TopCandidates`, `View_InterviewerWorkload`, `View_StageConversionRates`, etc.
+  - **Indexes:** `idx_app_candidate_pos`, `idx_job_requirements_skill`, `idx_job_employer`, `unique_saved`, etc.
   - **Stored Procedures:** encapsulate core business logic (e.g., `sp_ScheduleInterview`, `sp_RecordInterviewResult`, `sp_SubmitApplication`).
   - **Triggers:** automatically update application statuses, write audit logs, and push notifications to candidates and interviewers.
   - **Functions:** `fn_GetAge`, `fn_IsEligible`, `fn_AvgInterviewScore`, etc.
@@ -129,8 +130,8 @@ File → Run SQL Script → select database/02_procedures.sql
 
 Important: If you already have a database named recruitmentdb, the script will drop and recreate it. Adjust if needed.
 
-4. (Optional) Generate sample data
-This script will populate the database with 200 candidates, 12 real Vietnamese employers, 48 jobs, and realistic workflows including applications, interviews, offers, and notifications.
+4. Generate sample data
+This script will populate the database with 200 candidates, 12 real Vietnamese employers, 48 interviewers, 48 jobs, and realistic workflows including applications, interviews, offers, and notifications.
 
 bash
 python database/seed_full_demo_data.py
