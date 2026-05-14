@@ -197,5 +197,5 @@ Institution: National Economics University (NEU), College of Technology
 8. License
 This project is submitted as a university assignment. Feel free to use it for educational purposes.
 
-9. Video demenstration:
+9. Video demonstration:
 https://youtu.be/Y2mM64pC_CI
